@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cartes de campagne — Index</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0b0d0e;
+    --ink: #d7e4e2;
+    --dim: #7d908d;
+    --line: rgba(150,175,175,0.22);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; background:var(--bg); color:var(--ink);
+    font-family:'Rajdhani',sans-serif;
+    display:flex; align-items:center; justify-content:center; padding:40px 20px;
+  }
+  .wrap{ width:100%; max-width:920px; text-align:center; }
+  .kicker{
+    font-family:'Share Tech Mono',monospace; font-size:12px; letter-spacing:4px;
+    color:var(--dim); text-transform:uppercase; margin-bottom:14px;
+  }
+  h1{
+    margin:0 0 8px; font-size:34px; font-weight:700; letter-spacing:2px; text-transform:uppercase;
+  }
+  p.sub{ color:var(--dim); font-size:15px; margin:0 0 48px; }
+  .cards{ display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+  @media (max-width:680px){ .cards{ grid-template-columns:1fr; } }
+  .card{
+    display:block; text-decoration:none; color:inherit;
+    border:1px solid var(--line); padding:32px 24px; position:relative; overflow:hidden;
+    transition:border-color 0.2s, transform 0.2s;
+  }
+  .card:hover{ transform:translateY(-2px); }
+  .card .tag{
+    font-family:'Share Tech Mono',monospace; font-size:11px; letter-spacing:2px;
+    text-transform:uppercase; opacity:0.75; margin-bottom:14px; display:block;
+  }
+  .card h2{ margin:0 0 10px; font-size:22px; letter-spacing:1px; }
+  .card p{ margin:0; font-size:13.5px; color:var(--dim); line-height:1.5; }
+
+  .card.gf{ --accent:#6fd8c9; }
+  .card.gf:hover{ border-color:var(--accent); box-shadow:0 0 30px rgba(111,216,201,0.08); }
+  .card.gf .tag{ color:var(--accent); }
+
+  .card.aof{ --accent:#a9863f; }
+  .card.aof:hover{ border-color:var(--accent); box-shadow:0 0 30px rgba(169,134,63,0.08); }
+  .card.aof .tag{ color:var(--accent); }
+
+  footer{ margin-top:48px; font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--dim); opacity:0.6; letter-spacing:1px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="kicker">+++ Générateur de cartes de campagne +++</div>
+    <h1>Choisis ta carte</h1>
+    <p class="sub">Terrain personnalisé, factions, marqueurs, polices et palettes — tout est modifiable directement dans le navigateur.</p>
+
+    <div class="cards">
+      <a class="card gf" href="gf-campaign-map-template.html">
+        <span class="tag">Sci-fi / Grimdark</span>
+        <h2>Grimdark Future</h2>
+        <p>Carte tactique pour campagnes GF — style HUD, tons froids, factions et déploiements.</p>
+      </a>
+
+      <a class="card aof" href="aof-campaign-map-template.html">
+        <span class="tag">Fantasy</span>
+        <h2>Age of Fantasy</h2>
+        <p>Carte de chronique pour campagnes AoF — parchemin, royaumes, renforts et forces en présence.</p>
+      </a>
+    </div>
+
+    <footer>Ouvre une carte, personnalise-la, puis exporte en PNG ou sauvegarde ton projet en .json</footer>
+  </div>
+</body>
+</html>
