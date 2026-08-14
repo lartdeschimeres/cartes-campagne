@@ -654,7 +654,22 @@
     if(panelToggle){ togglePanel(panelToggle.dataset.panel); return; }
 
     const removeBtn = e.target.closest('.row-remove');
-    if(removeBtn){ pushHistory(); removeBtn.closest('.legend-row,.fac-row,.map-marker').remove(); return; }
+    if(removeBtn){
+      const layerRow = removeBtn.closest('.layers-panel .layer-row');
+      if(layerRow){
+        pushHistory();
+        const nameEl = layerRow.querySelector('.lname');
+        const lname = nameEl ? nameEl.textContent.trim() : '';
+        document.querySelectorAll('#mapLayer .map-marker, #mapLayer .map-label').forEach(m=>{ if((m.dataset.layer||'Par défaut')===lname) m.dataset.layer='Par défaut'; });
+        layers = layers.filter(l=>l.name!==lname);
+        if(activeLayerName===lname) activeLayerName = layers[0] ? layers[0].name : 'Par défaut';
+        if(!layers.length) layers = [ { name:'Par défaut', visible:true } ];
+        renderLayersUI();
+        applyLayerVisibility();
+        return;
+      }
+      pushHistory(); removeBtn.closest('.legend-row,.fac-row,.map-marker,.map-label').remove(); return;
+    }
 
     const iconSlot = e.target.closest('.icon-slot');
     if(iconSlot){
@@ -684,6 +699,13 @@
       if(type==='legend') addLegendRow();
       if(type==='faction') addFacRow('factionRows', 'Faction', 'Rôle sur le champ');
       if(type==='support') addFacRow('supportRows', 'Unité de soutien', 'Détail');
+      if(type==='layer'){
+        let n = 1; let name;
+        do{ name = 'Calque ' + n; n++; }while(layers.some(l=>l.name===name));
+        layers.push({ name, visible:true });
+        activeLayerName = name;
+        renderLayersUI();
+      }
     }
   });
 
