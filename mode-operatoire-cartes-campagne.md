@@ -77,7 +77,40 @@ Contrairement à l'export PDF (qui fige la carte en image), la sauvegarde de pro
 
 Range ces fichiers `.json` avec tes cartes (un par bataille/secteur) : ils te permettent de reprendre une carte en cours, ou de repartir d'une carte existante pour en faire une variante.
 
-## 10. Exporter la carte finie
+## 10. Annuler / Rétablir (Undo / Redo)
+
+Toutes les opérations qui modifient la carte peuvent être annulées **et rétablies** :
+
+- **↶ Annuler** : bouton dans la barre d'outils, ou **Ctrl+Z** (Cmd+Z sur Mac).
+- **↷ Rétablir** : bouton dans la barre d'outils, ou **Ctrl+Y** (ou Ctrl+Shift+Z).
+
+Sont annulables/rétablissables : ajout/suppression de ligne, ajout/suppression/déplacement/redimensionnement de marqueur, chargement d'une image (terrain ou icône), chargement d'un projet, création d'une nouvelle carte, **et les modifications de texte** dans tous les champs (titres, descriptions, noms de calques, étiquettes). L'historique conserve les 50 dernières actions. Dans les champs `<input>`/`<textarea>` natifs, c'est l'annulation native du navigateur qui s'applique.
+
+## 11. Sauvegarde automatique
+
+Le navigateur enregistre automatiquement ton travail (dans le `localStorage`), environ 800 ms après chaque modification. Si tu fermes l'onglet par accident, à la réouverture un message te proposera de **récupérer la carte précédente**. Cette sauvegarde est propre à chaque template (AoF et GF) et à chaque navigateur. Elle ne remplace pas la **Sauvegarde** manuelle (fichier `.json`) : pour archiver ou transférer une carte, utilise toujours « Sauvegarder ».
+
+## 12. Nouvelle carte (vider la planche)
+
+Le bouton **« Nouvelle carte »** remet la planche à vide (efface terrain, textes, icônes, marqueurs) pour repartir d'un fond propre. Une confirmation est demandée avant l'effacement. Comme toute action, elle est **annulable** via ↶ Annuler / Ctrl+Z si tu changes d'avis.
+
+## 12. Dupliquer, redimensionner et organiser les marqueurs
+
+- **Dupliquer un marqueur** : **Alt+clic** sur un marqueur, ou **clic droit** → une copie est créée juste à côté. Pratique pour poser plusieurs unités identiques.
+- **Redimensionner un marqueur** : survole-le, une **poignée dorée** apparaît en bas à droite. Glisse-la pour ajuster la taille (16 à 200 px). La taille est conservée à la sauvegarde.
+- **Calques** : ouvre le panneau **« Calques »** (bouton dans la barre d'outils). Crée plusieurs calques (ex. « Armées du Nord », « Renforts », « Objectifs »), choisis le **calque actif** via le menu déroulant : les nouveaux marqueurs/étiquettes y sont placés. Coche/décoche un calque pour l'afficher ou le masquer. Renomme un calque en éditant son nom directement ; supprime-le avec le **×** (ses marqueurs retournent sur le calque « Par défaut »).
+
+## 13. Étiquettes de texte libre sur la carte
+
+Le bouton **« + Étiquette »** crée une étiquette de texte positionnable sur la carte (noms de lieux, axes d'attaque, notes). Le texte est sélectionné à la création pour être édité immédiatement.
+
+- **Éditer** le texte : clique simplement dedans.
+- **Déplacer** l'étiquette : maintiens **Shift** et fais-la glisser (sans Shift, le clic édite le texte).
+- **Supprimer** : le **×** en survol.
+
+Les étiquettes appartiennent elles aussi à un calque et peuvent être masquées/affichées.
+
+## 14. Exporter la carte finie
 
 Deux formats possibles selon l'usage :
 

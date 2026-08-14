@@ -83,6 +83,25 @@
   .map-marker .row-remove{opacity:0; top:-8px; right:-8px; width:20px; height:20px; background:rgba(35,28,18,0.9); border-radius:50%;}
   .map-marker:hover .row-remove{opacity:0.9;}
   .map-marker.has-icon{ border-color:transparent; background-color:transparent; }
+  .map-label{
+    position:absolute; transform:translate(-50%,-50%); z-index:4; pointer-events:auto;
+    min-width:20px; max-width:320px; padding:2px 8px;
+    font-family:var(--font-display); font-size:18px; color:var(--ink);
+    background:rgba(216,201,166,0.55); border:1px solid rgba(60,45,25,0.25); border-radius:2px;
+    cursor:grab; touch-action:none; white-space:nowrap;
+    text-shadow:0 1px 0 rgba(255,255,255,0.4);
+  }
+  .map-label:active{cursor:grabbing;}
+  .map-label:focus{cursor:text; background:rgba(216,201,166,0.85); outline:1px solid var(--gold);}
+  .map-label .row-remove{opacity:0; top:-8px; right:-8px; width:18px; height:18px; background:rgba(35,28,18,0.9); border-radius:50%;}
+  .map-label:hover .row-remove{opacity:0.9;}
+  .map-marker .resize-handle{
+    position:absolute; right:-3px; bottom:-3px; width:10px; height:10px;
+    background:var(--gold); border:1px solid #241a10; cursor:nwse-resize;
+    opacity:0; transition:opacity 0.15s; z-index:3;
+  }
+  .map-marker:hover .resize-handle{opacity:0.9;}
+  .resize-handle:hover{opacity:1 !important;}
 
   header{ position:absolute; top:24px; right:36px; z-index:6; text-align:right; max-width:520px;}
   header .brand{
@@ -197,10 +216,23 @@
   .sheet.exporting .add-row,
   .sheet.exporting .panel-close,
   .sheet.exporting .row-remove,
+  .sheet.exporting .resize-handle,
+  .sheet.exporting .map-label .row-remove,
   .sheet.exporting .icon-slot::after{ display:none !important; }
   .sheet.exporting .terrain-slot{ filter:none !important; }
   .sheet.exporting::before{ mix-blend-mode:normal !important; opacity:0.35 !important; }
   .sheet.exporting::after{ opacity:0.3 !important; }
+  /* Freeze the sheet at its native pixel size during PNG export so html2canvas
+     captures the full 1600x920 canvas regardless of the viewport width.
+     html2canvas mis-handles `aspect-ratio` + `max-width:100%`, which caused the
+     squashed/stretched exports. */
+  .sheet.exporting{
+    width:1600px !important;
+    max-width:none !important;
+    aspect-ratio:auto !important;
+    height:920px !important;
+    transform:none !important;
+  }
 </style>
 </head>
 <body>
@@ -272,6 +304,13 @@
     </div>
     <button class="add-row" data-add="support">+ Ajouter un renfort</button>
   </div>
+
+  <div class="panel layers-panel panel-hidden" id="layersPanel">
+    <button class="panel-close" data-panel="layers" title="Masquer le panneau">×</button>
+    <div class="panel-title" contenteditable="true" data-ph="Calques">Calques</div>
+    <div id="layerRows"></div>
+    <button class="add-row" data-add="layer">+ Ajouter un calque</button>
+  </div>
 </div>
 
 <div class="toolbar">
@@ -280,13 +319,19 @@
   <button onclick="document.getElementById('terrainInput').click()">Changer le terrain</button>
   <input type="range" id="terrainZoom" min="20" max="300" value="100" title="Échelle du terrain (glisser l'image pour la repositionner)">
   <button id="addMarkerBtn">+ Marqueur</button>
+  <button id="addLabelBtn">+ Étiquette</button>
   <button class="panel-toggle" data-panel="legend">Légende</button>
+  <button class="panel-toggle" data-panel="layers">Calques</button>
+  <select id="activeLayerSelect" title="Calque actif (où placer les nouveaux marqueurs)"></select>
   <button class="panel-toggle" data-panel="factions">Factions</button>
   <button class="panel-toggle" data-panel="support">Soutien</button>
   <select id="fontSelect" title="Police de la carte"></select>
   <select id="paletteSelect" title="Palette de couleurs"></select>
   <button id="saveProjectBtn">Sauvegarder</button>
   <button onclick="document.getElementById('loadProjectInput').click()">Charger</button>
+  <button id="newMapBtn" title="Remettre la carte à vide">Nouvelle carte</button>
+  <button id="undoBtn" title="Annuler (Ctrl+Z)">↶ Annuler</button>
+  <button id="redoBtn" title="Rétablir (Ctrl+Y)">↷ Rétablir</button>
   <input type="file" id="loadProjectInput" accept="application/json,.json" style="display:none">
 </div>
 
@@ -350,6 +395,7 @@
     const file = e.target.files[0];
     if(!file) return;
     readImageFile(file, dataURL=>{
+      pushHistory();
       let img = slot.querySelector('img');
       if(!img){ img = document.createElement('img'); slot.appendChild(img); hint.style.display='none'; }
       img.src = dataURL;
@@ -366,6 +412,7 @@
       const rect = slot.getBoundingClientRect();
       const leftPct = ((e.clientX - rect.left) / rect.width) * 100;
       const topPct = ((e.clientY - rect.top) / rect.height) * 100;
+      pushHistory();
       makeMarker(leftPct, topPct, bg);
       return;
     }
@@ -404,30 +451,161 @@
 
   // ---------- Markers on the map ----------
   const mapLayer = document.getElementById('mapLayer');
-  let suppressClick = false;
+  // ---------- Layers (marker groups) ----------
+  // Each marker carries dataset.layer = layer name; hidden layers get .layer-hidden.
+  let layers = [ { name:'Par défaut', visible:true } ];
+  let activeLayerName = 'Par défaut';
+  const layerRowsEl = document.getElementById('layerRows');
+  const activeLayerSelect = document.getElementById('activeLayerSelect');
+
+  function renderLayersUI(){
+    // Active-layer dropdown
+    activeLayerSelect.innerHTML = '';
+    layers.forEach(l=>{
+      const opt = document.createElement('option');
+      opt.value = l.name; opt.textContent = l.name;
+      if(l.name === activeLayerName) opt.selected = true;
+      activeLayerSelect.appendChild(opt);
+    });
+    // Layers panel rows
+    layerRowsEl.innerHTML = '';
+    layers.forEach(l=>{
+      const row = document.createElement('div');
+      row.className = 'layer-row' + (l.name === activeLayerName ? ' active' : '');
+      row.innerHTML = `<input type="checkbox" ${l.visible ? 'checked' : ''} title="Afficher/Masquer">
+        <span class="lname" contenteditable="true" data-ph="Nom du calque">${l.name}</span>
+        <button class="row-remove" title="Supprimer le calque">×</button>`;
+      const cb = row.querySelector('input[type=checkbox]');
+      const nameEl = row.querySelector('.lname');
+      // Activate layer on row click (not on checkbox/remove/name)
+      row.addEventListener('click', e=>{
+        if(e.target === cb || e.target.closest('.row-remove') || e.target === nameEl) return;
+        setActiveLayer(l.name);
+      });
+      cb.addEventListener('change', ()=>{
+        l.visible = cb.checked;
+        applyLayerVisibility();
+        scheduleAutosave();
+      });
+      nameEl.addEventListener('blur', ()=>{
+        const newName = nameEl.textContent.trim() || l.name;
+        if(newName !== l.name){
+          const oldName = l.name;
+          l.name = newName;
+          // rename markers on this layer
+          document.querySelectorAll(`#mapLayer .map-marker[data-layer="${cssEscape(oldName)}"]`).forEach(m=>{ m.dataset.layer = newName; });
+          if(activeLayerName === oldName) activeLayerName = newName;
+          renderLayersUI();
+          scheduleAutosave();
+        }
+      });
+      layerRowsEl.appendChild(row);
+    });
+  }
+  function cssEscape(str){
+    return String(str).replace(/["\\]/g, '\\$&');
+  }
+  function setActiveLayer(name){
+    activeLayerName = name;
+    renderLayersUI();
+  }
+  function applyLayerVisibility(){
+    document.querySelectorAll('#mapLayer .map-marker, #mapLayer .map-label').forEach(m=>{
+      const ln = m.dataset.layer || 'Par défaut';
+      const layer = layers.find(l=>l.name === ln) || { visible:true };
+      m.classList.toggle('layer-hidden', !layer.visible);
+    });
+  }
+  activeLayerSelect.addEventListener('change', ()=>{ activeLayerName = activeLayerSelect.value; renderLayersUI(); });
+  renderLayersUI();
+
+  // Marker that was just dragged; its following click (the browser synthesizes
+  // one after pointerup) must be swallowed so it doesn't open the file picker.
+  let justDraggedMarker = null;
   let dragState = null;
 
-  function makeMarker(leftPct, topPct, bgImage){
+  function makeMarker(leftPct, topPct, bgImage, size, layer){
     const marker = document.createElement('div');
     marker.className = 'map-marker icon-slot' + (bgImage ? ' has-icon' : '');
     marker.style.left = leftPct + '%';
     marker.style.top = topPct + '%';
+    marker.dataset.layer = layer || activeLayerName;
+    if(size){ marker.style.width = size + 'px'; marker.style.height = size + 'px'; }
     if(bgImage){ marker.style.backgroundImage = bgImage; }
-    marker.innerHTML = '<input type="file" class="icon-input" accept="image/*"><button class="row-remove" title="Supprimer">×</button>';
+    marker.innerHTML = '<input type="file" class="icon-input" accept="image/*"><button class="row-remove" title="Supprimer">×</button><div class="resize-handle" title="Redimensionner"></div>';
     mapLayer.appendChild(marker);
+    applyLayerVisibility();
     return marker;
   }
-  document.getElementById('addMarkerBtn').addEventListener('click', ()=> makeMarker(50, 50, null));
+  document.getElementById('addMarkerBtn').addEventListener('click', ()=>{ pushHistory(); makeMarker(50, 50, null); });
+  // ---------- Free-text labels on the map ----------
+  function makeLabel(leftPct, topPct, text, layer){
+    const label = document.createElement('div');
+    label.className = 'map-label';
+    label.setAttribute('contenteditable', 'true');
+    label.style.left = leftPct + '%';
+    label.style.top = topPct + '%';
+    label.dataset.layer = layer || activeLayerName;
+    label.innerHTML = '<button class="row-remove" title="Supprimer">×</button>';
+    const span = document.createElement('span');
+    span.textContent = text || '';
+    label.appendChild(span);
+    mapLayer.appendChild(label);
+    applyLayerVisibility();
+    return label;
+  }
+  document.getElementById('addLabelBtn').addEventListener('click', ()=>{
+    pushHistory();
+    const lbl = makeLabel(50, 50, 'Nouveau texte');
+    lbl.focus();
+    // select the text for quick editing
+    const range = document.createRange();
+    range.selectNodeContents(lbl.querySelector('span'));
+    const sel = window.getSelection();
+    sel.removeAllRanges(); sel.addRange(range);
+  });
+  function serializeLabel(label){
+    const span = label.querySelector('span');
+    return {
+      left: parseFloat(label.style.left),
+      top: parseFloat(label.style.top),
+      text: span ? span.innerHTML : '',
+      layer: label.dataset.layer || activeLayerName
+    };
+  }
 
+  let resizeState = null;
   document.addEventListener('pointerdown', e=>{
-    const marker = e.target.closest('.map-marker');
+    if(e.target.closest('.resize-handle')){
+      const marker = e.target.closest('.map-marker');
+      if(!marker) return;
+      e.preventDefault();
+      const startW = parseFloat(getComputedStyle(marker).width) || 32;
+      resizeState = { marker, startX:e.clientX, startW, moved:false };
+      return;
+    }
+    const marker = e.target.closest('.map-marker, .map-label');
     if(!marker || e.target.closest('.row-remove')) return;
+    // A contenteditable label is dragged only while Shift is held; otherwise the
+    // click places the caret for text editing.
+    if(marker.classList.contains('map-label') && !e.shiftKey) return;
+    if(marker.isContentEditable){ marker.blur(); }
     dragState = { marker, startX:e.clientX, startY:e.clientY, moved:false, rect: marker.closest('.sheet').getBoundingClientRect() };
   });
   document.addEventListener('pointermove', e=>{
+    if(resizeState){
+      const dx = e.clientX - resizeState.startX;
+      const newW = Math.max(16, Math.min(200, resizeState.startW + dx));
+      resizeState.marker.style.width = newW + 'px';
+      resizeState.marker.style.height = newW + 'px'; // keep square
+      if(Math.abs(dx) > 2 && !resizeState.moved){ resizeState.moved = true; pushHistory(); }
+      return;
+    }
     if(!dragState) return;
     const dx = e.clientX - dragState.startX, dy = e.clientY - dragState.startY;
-    if(Math.abs(dx) > 4 || Math.abs(dy) > 4) dragState.moved = true;
+    if(Math.abs(dx) > 4 || Math.abs(dy) > 4){
+      if(!dragState.moved){ dragState.moved = true; pushHistory(); }
+    }
     if(dragState.moved){
       const r = dragState.rect;
       let leftPct = Math.min(100, Math.max(0, ((e.clientX - r.left) / r.width) * 100));
@@ -437,8 +615,22 @@
     }
   });
   document.addEventListener('pointerup', ()=>{
-    if(dragState && dragState.moved){ suppressClick = true; setTimeout(()=> suppressClick = false, 0); }
+    if(resizeState && resizeState.moved){ justDraggedMarker = resizeState.marker; }
+    resizeState = null;
+    if(dragState && dragState.moved){ justDraggedMarker = dragState.marker; }
     dragState = null;
+  });
+
+  document.addEventListener('contextmenu', e=>{
+    const marker = e.target.closest('.map-marker');
+    if(!marker || e.target.closest('.row-remove')) return;
+    e.preventDefault();
+    pushHistory();
+    const left = parseFloat(marker.style.left) + 3;
+    const top  = parseFloat(marker.style.top) + 3;
+    const bg = marker.style.backgroundImage || null;
+    makeMarker(Math.min(100,left), Math.min(100,top), bg);
+    showToast('Marqueur dupliqué.');
   });
 
   document.addEventListener('dragstart', e=>{
@@ -453,11 +645,42 @@
     if(panelToggle){ togglePanel(panelToggle.dataset.panel); return; }
 
     const removeBtn = e.target.closest('.row-remove');
-    if(removeBtn){ removeBtn.closest('.legend-row,.fac-row,.map-marker').remove(); return; }
+    if(removeBtn){
+      const layerRow = removeBtn.closest('.layers-panel .layer-row');
+      if(layerRow){
+        pushHistory();
+        const nameEl = layerRow.querySelector('.lname');
+        const lname = nameEl ? nameEl.textContent.trim() : '';
+        // Move markers of this layer to 'Par défaut', then drop the layer.
+        document.querySelectorAll('#mapLayer .map-marker').forEach(m=>{ if((m.dataset.layer||'Par défaut')===lname) m.dataset.layer='Par défaut'; });
+        layers = layers.filter(l=>l.name!==lname);
+        if(activeLayerName===lname) activeLayerName = layers[0] ? layers[0].name : 'Par défaut';
+        if(!layers.length) layers = [ { name:'Par défaut', visible:true } ];
+        renderLayersUI();
+        applyLayerVisibility();
+        return;
+      }
+      pushHistory(); removeBtn.closest('.legend-row,.fac-row,.map-marker,.map-label').remove(); return;
+    }
 
     const iconSlot = e.target.closest('.icon-slot');
     if(iconSlot){
-      if(suppressClick) return;
+      // Swallow the synthetic click right after a drag of this very marker.
+      if(justDraggedMarker && iconSlot === justDraggedMarker){
+        justDraggedMarker = null;
+        return;
+      }
+      justDraggedMarker = null;
+      // Alt+click on a marker duplicates it (offset slightly so both are visible).
+      if(e.altKey && iconSlot.classList.contains('map-marker')){
+        pushHistory();
+        const left = parseFloat(iconSlot.style.left) + 3;
+        const top  = parseFloat(iconSlot.style.top) + 3;
+        const bg = iconSlot.style.backgroundImage || null;
+        makeMarker(Math.min(100,left), Math.min(100,top), bg);
+        showToast('Marqueur dupliqué.');
+        return;
+      }
       iconSlot.querySelector('.icon-input').click();
       return;
     }
@@ -465,9 +688,17 @@
     const addBtn = e.target.closest('.add-row');
     if(addBtn){
       const type = addBtn.dataset.add;
+      pushHistory();
       if(type==='legend') addLegendRow();
       if(type==='faction') addFacRow('factionRows', 'Royaume / Armée', 'Rôle sur le champ');
       if(type==='support') addFacRow('supportRows', 'Unité alliée', 'Détail');
+      if(type==='layer'){
+        let n = 1; let name;
+        do{ name = 'Calque ' + n; n++; }while(layers.some(l=>l.name===name));
+        layers.push({ name, visible:true });
+        activeLayerName = name;
+        renderLayersUI();
+      }
     }
   });
 
@@ -477,6 +708,7 @@
       if(!file) return;
       const iconSlot = e.target.closest('.icon-slot');
       readImageFile(file, dataURL=>{
+        pushHistory();
         iconSlot.style.backgroundImage = `url(${dataURL})`;
         iconSlot.classList.add('has-icon');
         if(!iconSlot.classList.contains('map-marker')) iconSlot.draggable = true;
@@ -551,6 +783,180 @@
     Object.entries(p.vars).forEach(([k,v])=> document.documentElement.style.setProperty(k, v));
   });
 
+  // ---------- Undo history ----------
+  // Snapshots of the full project state, captured BEFORE each mutating action
+  // (add/remove row, marker drag, image load). Undo restores the previous one.
+  const undoStack = [];
+  const redoStack = [];
+  const UNDO_LIMIT = 50;
+
+  function captureState(){
+    const terrainImg = document.querySelector('.terrain-slot img');
+    return {
+      version: 1,
+      template: 'aof',
+      brand: document.querySelector('header .brand').innerHTML,
+      title: document.querySelector('header h1').innerHTML,
+      meta: document.querySelector('header .meta').innerHTML,
+      terrain: terrainImg ? terrainImg.src : null,
+      terrainScale: terrainScale,
+      terrainOffsetX: terrainOffsetX,
+      terrainOffsetY: terrainOffsetY,
+      legendTitle: document.querySelector('.legend .panel-title').innerHTML,
+      legend: Array.from(document.querySelectorAll('#legendRows .legend-row')).map(serializeRow),
+      factionTitle: document.querySelector('.factions .panel-title').innerHTML,
+      factions: Array.from(document.querySelectorAll('#factionRows .fac-row')).map(serializeRow),
+      supportTitle: document.querySelector('.support .panel-title').innerHTML,
+      support: Array.from(document.querySelectorAll('#supportRows .fac-row')).map(serializeRow),
+      layers: layers.map(l=>({name:l.name, visible:l.visible})),
+      activeLayer: activeLayerName,
+      layersVisible: !document.querySelector('.layers-panel').classList.contains('panel-hidden'),
+      layers: layers.map(l=>({name:l.name, visible:l.visible})),
+      activeLayer: activeLayerName,
+      layersVisible: !document.querySelector('.layers-panel').classList.contains('panel-hidden'),
+      labels: Array.from(document.querySelectorAll('#mapLayer .map-label')).map(serializeLabel),
+      markers: Array.from(document.querySelectorAll('#mapLayer .map-marker')).map(serializeMarker),
+      legendVisible: !document.querySelector('.legend').classList.contains('panel-hidden'),
+      factionsVisible: !document.querySelector('.factions').classList.contains('panel-hidden'),
+      supportVisible: !document.querySelector('.support').classList.contains('panel-hidden'),
+      font: parseInt(fontSelect.value || 0),
+      palette: parseInt(paletteSelect.value || 0)
+    };
+  }
+  function pushHistory(){
+    undoStack.push(captureState());
+    if(undoStack.length > UNDO_LIMIT) undoStack.shift();
+    redoStack.length = 0; // a new action invalidates the redo branch
+    updateUndoBtn();
+  }
+  function updateUndoBtn(){
+    const u = document.getElementById('undoBtn');
+    if(u) u.disabled = undoStack.length === 0;
+    const r = document.getElementById('redoBtn');
+    if(r) r.disabled = redoStack.length === 0;
+  }
+  function undo(){
+    if(undoStack.length === 0) return;
+    const entry = undoStack[undoStack.length-1];
+    // Text-restore entries are handled inline (no full project reload).
+    if(entry && entry.__textRestore){
+      redoStack.push(captureState());
+      const e = undoStack.pop();
+      // Save current (post-edit) html for redo, then restore prev.
+      const cur = e.el.innerHTML;
+      e.el.innerHTML = e.prev;
+      e.prev = cur; // swap so a subsequent redo restores the edited version
+      updateUndoBtn();
+      scheduleAutosave();
+      return;
+    }
+    redoStack.push(captureState());
+    const prev = undoStack.pop();
+    loadProject(prev);
+    updateUndoBtn();
+  }
+  function redo(){
+    if(redoStack.length === 0) return;
+    const entry = redoStack[redoStack.length-1];
+    if(entry && entry.__textRestore){
+      undoStack.push(captureState());
+      const e = redoStack.pop();
+      const cur = e.el.innerHTML;
+      e.el.innerHTML = e.prev;
+      e.prev = cur;
+      updateUndoBtn();
+      scheduleAutosave();
+      return;
+    }
+    undoStack.push(captureState());
+    const next = redoStack.pop();
+    loadProject(next);
+    updateUndoBtn();
+  }
+
+  // ---------- Autosave to localStorage ----------
+  const AUTOSAVE_KEY = 'aof-campaign-map-autosave';
+  let autosaveTimer = null;
+  function autosave(){
+    try{ localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(captureState())); }
+    catch(err){ /* storage may be full (base64 images) or disabled: stay silent */ }
+  }
+  function scheduleAutosave(){
+    if(autosaveTimer) clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(autosave, 800); // debounce
+  }
+  // Patch pushHistory so every undoable action also schedules an autosave.
+  const _origPushHistory = pushHistory;
+  pushHistory = function(){ _origPushHistory(); scheduleAutosave(); };
+  // Also autosave on free-text edits and contenteditable changes (debounced).
+  document.addEventListener('input', e=>{
+    if(e.target.isContentEditable) scheduleAutosave();
+  });
+  // ---------- Undo for contenteditable text edits ----------
+  // On focus, snapshot the field's innerHTML; on blur, if it changed, push the
+  // pre-edit snapshot to the undo stack so Ctrl+Z reverts the text change.
+  let textEditSnapshot = null;
+  document.addEventListener('focusin', e=>{
+    if(e.target.isContentEditable){ textEditSnapshot = { el: e.target, html: e.target.innerHTML }; }
+  });
+  document.addEventListener('focusout', e=>{
+    if(!textEditSnapshot || e.target !== textEditSnapshot.el) return;
+    if(e.target.innerHTML !== textEditSnapshot.html){
+      // Restore the pre-edit content as the undoable "previous" state.
+      const prev = textEditSnapshot.html;
+      const el = e.target;
+      // Push a history entry whose restore will set this element back to prev.
+      undoStack.push({ __textRestore: true, el, prev });
+      if(undoStack.length > UNDO_LIMIT) undoStack.shift();
+      redoStack.length = 0;
+      updateUndoBtn();
+    }
+    textEditSnapshot = null;
+  });
+  function loadAutosave(){
+    try{
+      const raw = localStorage.getItem(AUTOSAVE_KEY);
+      if(!raw) return null;
+      return JSON.parse(raw);
+    }catch(err){ return null; }
+  }
+  function hasAutosave(){ return !!localStorage.getItem(AUTOSAVE_KEY); }
+
+  // ---------- New (blank) map ----------
+  function newMap(){
+    if(!confirm('Créer une nouvelle carte ? Le contenu actuel sera effacé (Annuler disponible pour revenir en arrière).')) return;
+    pushHistory();
+    loadProject({
+      version: 1, template: 'aof',
+      brand: '', title: '', meta: '',
+      terrain: null,
+      legendTitle: '', legend: [],
+      factionTitle: '', factions: [],
+      supportTitle: '', support: [],
+      markers: [],
+      labels: [],
+      legendVisible: true, factionsVisible: true, supportVisible: true, layersVisible: false,
+      font: 0, palette: 0
+    });
+    showToast('Nouvelle carte créée. Utilise ↶ Annuler pour revenir en arrière.');
+    autosave(); // persist the blank state so reload won't resurrect old content
+  }
+  document.getElementById('newMapBtn').addEventListener('click', newMap);
+  document.getElementById('undoBtn').addEventListener('click', undo);
+  document.getElementById('redoBtn').addEventListener('click', redo);
+  document.addEventListener('keydown', e=>{
+    // Ignore shortcuts while editing text in a contenteditable or input.
+    const k = e.key.toLowerCase();
+    if(!(e.ctrlKey || e.metaKey)) return;
+    // Allow undo/redo even inside contenteditable (text-edit undo is supported).
+    // Only block native browser undo for actual <input>/<textarea> form fields.
+    const isForm = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName);
+    // Ctrl+Z = undo ; Ctrl+Shift+Z or Ctrl+Y = redo
+    if(k === 'z' && !e.shiftKey){ if(!isForm){ e.preventDefault(); undo(); } }
+    else if((k === 'z' && e.shiftKey) || k === 'y'){ if(!isForm){ e.preventDefault(); redo(); } }
+  });
+  updateUndoBtn();
+
   // ---------- Export to PNG ----------
   function pinCssVarsForExport(){
     const root = document.documentElement;
@@ -577,7 +983,9 @@
     sheetEl.classList.add('exporting');
     pinCssVarsForExport();
     try{
-      const canvas = await html2canvas(sheetEl, { backgroundColor: null, scale: 2 });
+      // Capture the native size explicitly: html2canvas struggles with
+      // aspect-ratio, so we pass fixed width/height to avoid squashing.
+      const canvas = await html2canvas(sheetEl, { backgroundColor: null, scale: 2, width: 1600, height: 920, windowWidth: 1600, windowHeight: 920 });
       canvas.toBlob(blob=>{
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -613,9 +1021,12 @@
     };
   }
   function serializeMarker(marker){
+    const w = parseFloat(marker.style.width);
     return {
       left: parseFloat(marker.style.left),
       top: parseFloat(marker.style.top),
+      size: isNaN(w) ? null : w,
+      layer: marker.dataset.layer || activeLayerName,
       icon: urlFromBg(marker.style.backgroundImage)
     };
   }
@@ -637,6 +1048,7 @@
       factions: Array.from(document.querySelectorAll('#factionRows .fac-row')).map(serializeRow),
       supportTitle: document.querySelector('.support .panel-title').innerHTML,
       support: Array.from(document.querySelectorAll('#supportRows .fac-row')).map(serializeRow),
+      labels: Array.from(document.querySelectorAll('#mapLayer .map-label')).map(serializeLabel),
       markers: Array.from(document.querySelectorAll('#mapLayer .map-marker')).map(serializeMarker),
       legendVisible: !document.querySelector('.legend').classList.contains('panel-hidden'),
       factionsVisible: !document.querySelector('.factions').classList.contains('panel-hidden'),
@@ -669,6 +1081,15 @@
       terrainOffsetY = typeof state.terrainOffsetY === 'number' ? state.terrainOffsetY : 0;
       terrainZoom.value = Math.round(terrainScale * 100);
       updateTerrainTransform();
+    } else {
+      // No terrain in the project: ensure the hint is visible again and remove
+      // any previously loaded terrain image.
+      const img = document.querySelector('.terrain-slot img');
+      if(img){ img.remove(); }
+      hint.style.display = '';
+      terrainScale = 1; terrainOffsetX = 0; terrainOffsetY = 0;
+      terrainZoom.value = 100;
+      updateTerrainTransform();
     }
     if(state.legendTitle !== undefined) document.querySelector('.legend .panel-title').innerHTML = state.legendTitle;
     if(state.factionTitle !== undefined) document.querySelector('.factions .panel-title').innerHTML = state.factionTitle;
@@ -681,23 +1102,50 @@
     document.getElementById('supportRows').innerHTML = '';
     (state.support || []).forEach(d => addFacRow('supportRows', 'Unité alliée', 'Détail', d));
 
+    if(Array.isArray(state.layers) && state.layers.length){
+      layers = state.layers;
+    } else {
+      layers = [ { name:'Par défaut', visible:true } ];
+    }
+    activeLayerName = state.activeLayer || (layers[0] && layers[0].name) || 'Par défaut';
+    renderLayersUI();
     document.getElementById('mapLayer').innerHTML = '';
-    (state.markers || []).forEach(m => makeMarker(m.left, m.top, m.icon ? `url(${m.icon})` : null));
+    (state.markers || []).forEach(m => makeMarker(m.left, m.top, m.icon ? `url(${m.icon})` : null, m.size, m.layer));
+    (state.labels || []).forEach(l => makeLabel(l.left, l.top, l.text, l.layer));
 
     setPanelVisible('legend', state.legendVisible !== false);
+    setPanelVisible('layers', state.layersVisible !== false);
     setPanelVisible('factions', state.factionsVisible !== false);
     setPanelVisible('support', state.supportVisible !== false);
 
     if(typeof state.font === 'number' && fontCombos[state.font]){ fontSelect.value = state.font; fontSelect.dispatchEvent(new Event('change')); }
     if(typeof state.palette === 'number' && paletteCombos[state.palette]){ paletteSelect.value = state.palette; paletteSelect.dispatchEvent(new Event('change')); }
   }
+  // ---------- Startup: offer to recover autosaved work ----------
+  (function tryRecoverAutosave(){
+    if(!hasAutosave()) return;
+    // Avoid pestering if the user just saved/loaded; only prompt on fresh load.
+    const recovered = loadAutosave();
+    if(!recovered) return;
+    // Defer the prompt so the toast/container is ready and the sheet is rendered.
+    setTimeout(()=>{
+      if(confirm('Une sauvegarde automatique d\'une carte précédente a été trouvée. La recharger maintenant ?\n\n(Clique sur Annuler pour repartir d\'une carte vide.)')){
+        loadProject(recovered);
+        showToast('Carte récupérée depuis la sauvegarde automatique.');
+      }
+    }, 50);
+  })();
+
   document.getElementById('saveProjectBtn').addEventListener('click', saveProject);
   document.getElementById('loadProjectInput').addEventListener('change', e=>{
     const file = e.target.files[0];
     if(!file) return;
     const reader = new FileReader();
     reader.onload = ()=>{
-      try{ loadProject(JSON.parse(reader.result)); }
+      try{
+        pushHistory();
+        loadProject(JSON.parse(reader.result));
+      }
       catch(err){ alert('Fichier de projet invalide.'); }
       e.target.value = '';
     };
