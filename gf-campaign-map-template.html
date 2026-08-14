@@ -948,9 +948,22 @@
     const sheetEl = document.getElementById('sheet');
     sheetEl.classList.add('exporting');
     pinCssVarsForExport();
+    // Force a fixed pixel size INLINE on the sheet itself (not just via class),
+    // because html2canvas clones the node into a sandbox iframe where the
+    // viewport may be narrower than 1600px and `aspect-ratio` + `max-width:100%`
+    // would otherwise re-shrink it, squashing the exported image.
+    const prevStyle = sheetEl.getAttribute('style') || '';
+    sheetEl.style.width = '1600px';
+    sheetEl.style.height = '920px';
+    sheetEl.style.maxWidth = 'none';
+    sheetEl.style.aspectRatio = 'auto';
+    sheetEl.style.transform = 'none';
+    // The body uses flex centering which can also constrain the sheet; relax it.
+    const prevBodyJustify = document.body.style.justifyContent;
+    const prevBodyAlign = document.body.style.alignItems;
+    const prevBodyDisplay = document.body.style.display;
+    document.body.style.display = 'block';
     try{
-      // Capture the native size explicitly: html2canvas struggles with
-      // aspect-ratio, so we pass fixed width/height to avoid squashing.
       const canvas = await html2canvas(sheetEl, { backgroundColor: null, scale: 2, width: 1600, height: 920, windowWidth: 1600, windowHeight: 920 });
       canvas.toBlob(blob=>{
         const url = URL.createObjectURL(blob);
@@ -967,6 +980,10 @@
       showToast("Erreur lors de l'export en image. Réessaie, ou utilise \"Imprimer / PDF\".");
     } finally {
       sheetEl.classList.remove('exporting');
+      sheetEl.setAttribute('style', prevStyle);
+      document.body.style.display = prevBodyDisplay;
+      document.body.style.justifyContent = prevBodyJustify;
+      document.body.style.alignItems = prevBodyAlign;
       unpinCssVarsForExport();
     }
   }
