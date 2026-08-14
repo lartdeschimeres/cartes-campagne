@@ -730,15 +730,22 @@
   });
 
   // ---------- Panel visibility ----------
+  function findPanel(name){
+    // The legend/factions/support panels use their name as a CSS class, but the
+    // layers panel uses "layers-panel" instead of "layers", so a plain class
+    // lookup misses it. Fall back to the panel-close button's data-panel attribute.
+    return document.querySelector('.' + name)
+        || (document.querySelector(`.panel-close[data-panel="${name}"]`) || {}).parentNode;
+  }
   function setPanelVisible(name, visible){
-    const panel = document.querySelector('.' + name);
+    const panel = findPanel(name);
     if(!panel) return;
     panel.classList.toggle('panel-hidden', !visible);
     const btn = document.querySelector(`.panel-toggle[data-panel="${name}"]`);
     if(btn) btn.classList.toggle('off', !visible);
   }
   function togglePanel(name){
-    const panel = document.querySelector('.' + name);
+    const panel = findPanel(name);
     if(!panel) return;
     setPanelVisible(name, panel.classList.contains('panel-hidden'));
   }
