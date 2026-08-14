@@ -96,6 +96,13 @@
   .map-label:focus{cursor:text; background:rgba(18,20,20,0.85); outline:1px solid var(--accent);}
   .map-label .row-remove{opacity:0.9; top:-9px; right:-9px; width:20px; height:20px; background:rgba(10,14,18,0.95); border-radius:50%; z-index:5;}
   .map-label:hover .row-remove{opacity:1;}
+  .map-label .layer-badge{
+    position:absolute; top:-16px; left:50%; transform:translateX(-50%);
+    font-size:9px; font-family:var(--font-body); letter-spacing:0.5px;
+    background:rgba(35,28,18,0.85); color:#c9bda1; padding:1px 6px; border-radius:2px;
+    white-space:nowrap; pointer-events:none; opacity:0; transition:opacity 0.15s;
+  }
+  .map-label:hover .layer-badge{opacity:0.9;}
 
   header{ position:absolute; top:26px; right:36px; z-index:6; text-align:right; max-width:520px;}
   header .brand{
@@ -184,7 +191,12 @@
   .layers-panel .layer-row .lname{ flex:1; font-size:13px; font-family:var(--font-display); }
   .layers-panel .layer-row input[type=checkbox]{ margin:0; }
   .layers-panel .layer-row.active{ background:var(--accent-dim); border-radius:3px; }
-  .layers-panel .layer-row .row-remove{ top:0; right:0; }
+  .layers-panel .layer-row .row-remove{
+    opacity:1 !important; position:absolute; top:50%; right:4px; transform:translateY(-50%);
+    width:22px; height:22px; font-size:16px; line-height:20px; text-align:center;
+    background:var(--danger); color:#f0d9b0; border:1px solid rgba(0,0,0,0.4); border-radius:50%;
+  }
+  .layers-panel .layer-row:hover .row-remove{ opacity:1; }
   .layer-hidden{ display:none !important; }
   .toolbar button.panel-toggle.off{opacity:0.4;}
 
@@ -305,7 +317,7 @@
     <button class="add-row" data-add="support">+ Ajouter un soutien</button>
   </div>
 
-  <div class="panel layers-panel panel-hidden" id="layersPanel">
+  <div class="panel layers-panel" id="layersPanel">
     <button class="panel-close" data-panel="layers" title="Masquer le panneau">×</button>
     <div class="panel-title" contenteditable="true" data-ph="Calques">Calques</div>
     <div id="layerRows"></div>
@@ -332,7 +344,7 @@
   <button id="newMapBtn" title="Remettre la carte à vide">Nouvelle carte</button>
   <button id="undoBtn" title="Annuler (Ctrl+Z)">↶ Annuler</button>
   <button id="redoBtn" title="Rétablir (Ctrl+Y)">↷ Rétablir</button>
-  <span style="color:#6b5228; font-size:10px; padding:0 6px;">v2.1</span>
+  <span style="color:#6b5228; font-size:10px; padding:0 6px;">v2.2</span>
   <input type="file" id="loadProjectInput" accept="application/json,.json" style="display:none">
 </div>
 
@@ -501,8 +513,13 @@
   }
   function cssEscape(str){ return String(str).replace(/["\\]/g, '\\$&'); }
   function setActiveLayer(name){ activeLayerName = name; renderLayersUI(); }
+  function updateLayerBadge(el){
+    const badge = el.querySelector('.layer-badge');
+    if(badge){ badge.textContent = '▸ ' + (el.dataset.layer || 'Par défaut'); }
+  }
   function applyLayerVisibility(){
     document.querySelectorAll('#mapLayer .map-marker, #mapLayer .map-label').forEach(m=>{
+      updateLayerBadge(m);
       const ln = m.dataset.layer || 'Par défaut';
       const layer = layers.find(l=>l.name === ln) || { visible:true };
       m.classList.toggle('layer-hidden', !layer.visible);
@@ -538,10 +555,11 @@
     label.style.left = leftPct + '%';
     label.style.top = topPct + '%';
     label.dataset.layer = layer || activeLayerName;
-    label.innerHTML = '<button class="row-remove" title="Supprimer">×</button>';
+    label.innerHTML = '<button class="row-remove" title="Supprimer">×</button><div class="layer-badge"></div>';
     const span = document.createElement('span');
     span.textContent = text || '';
     label.appendChild(span);
+    updateLayerBadge(label);
     mapLayer.appendChild(label);
     applyLayerVisibility();
     return label;
