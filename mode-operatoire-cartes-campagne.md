@@ -12,6 +12,9 @@ Ce mode opératoire couvre les deux templates (`gf-campaign-map-template.html` e
 2. Choisis ton image de terrain (relief, heightmap, rendu Blender, etc.) depuis ton ordinateur.
 3. Tu peux aussi glisser-déposer l'image directement sur cette zone.
 4. Pour la remplacer, utilise le bouton **"Changer le terrain"** dans la barre d'outils en bas de l'écran.
+5. Une fois l'image en place, deux réglages sont disponibles :
+   - **Curseur d'échelle** (à côté du bouton "Changer le terrain") : zoome ou dézoome le terrain.
+   - **Glisser l'image directement** : clique dessus et déplace la souris pour la repositionner dans le cadre.
 
 ## 2. Remplir les textes
 
