@@ -5,7 +5,18 @@
 <title>Grimdark Future — Carte de campagne</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link id="fontLink" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+(function(){
+  var s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+  s.onerror = function(){
+    var fallback = document.createElement('script');
+    fallback.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+    document.head.appendChild(fallback);
+  };
+  document.head.appendChild(s);
+})();
+</script>
 <style>
   :root{
     --bg: #0b0d0e;
@@ -47,7 +58,7 @@
     text-align:center; cursor:pointer;
     filter: grayscale(0.5) contrast(1.05);
   }
-  .terrain-slot img{width:100%; height:100%; object-fit:cover; transform-origin:center center; cursor:grab;}
+  .terrain-slot img{width:100%; height:100%; object-fit:contain; transform-origin:center center; cursor:grab;}
   .terrain-slot img:active{cursor:grabbing;}
   .terrain-slot .hint{
     color:var(--dim); font-size:15px; letter-spacing:2px; text-transform:uppercase;
@@ -55,11 +66,12 @@
   }
   .terrain-slot input{display:none;}
 
-  .map-layer{ position:absolute; inset:0; z-index:4; }
+  .map-layer{ position:absolute; inset:0; z-index:4; pointer-events:none; }
   .map-marker{
     position:absolute; width:32px; height:32px; transform:translate(-50%,-50%);
     border:1px solid var(--accent-dim); border-radius:4px; background-color:rgba(11,13,14,0.4);
     cursor:grab; touch-action:none; background-size:cover; background-position:center; background-repeat:no-repeat;
+    pointer-events:auto;
   }
   .map-marker:active{cursor:grabbing;}
   .map-marker .row-remove{opacity:0; top:-8px; right:-8px; width:20px; height:20px; background:rgba(11,13,14,0.85); border-radius:50%;}
@@ -179,6 +191,9 @@
   .sheet.exporting .panel-close,
   .sheet.exporting .row-remove,
   .sheet.exporting .icon-slot::after{ display:none !important; }
+  .sheet.exporting .terrain-slot{ filter:none !important; }
+  .sheet.exporting .panel{ backdrop-filter:none !important; }
+  .sheet.exporting::before{ opacity:0.45 !important; }
 </style>
 </head>
 <body>
@@ -339,6 +354,14 @@
   slot.addEventListener('dragover', e=>{e.preventDefault();});
   slot.addEventListener('drop', e=>{
     e.preventDefault();
+    const bg = e.dataTransfer.getData('text/plain');
+    if(bg && bg.startsWith('url(')){
+      const rect = slot.getBoundingClientRect();
+      const leftPct = ((e.clientX - rect.left) / rect.width) * 100;
+      const topPct = ((e.clientY - rect.top) / rect.height) * 100;
+      makeMarker(leftPct, topPct, bg);
+      return;
+    }
     const file = e.dataTransfer.files[0];
     if(file){ input.files = e.dataTransfer.files; input.dispatchEvent(new Event('change')); }
   });
@@ -415,20 +438,6 @@
     const iconSlot = e.target.closest('.icon-slot.has-icon');
     if(iconSlot){ e.dataTransfer.setData('text/plain', iconSlot.style.backgroundImage); }
   });
-  mapLayer.addEventListener('dragover', e=> e.preventDefault());
-  mapLayer.addEventListener('drop', e=>{
-    e.preventDefault();
-    const bg = e.dataTransfer.getData('text/plain');
-    const rect = mapLayer.getBoundingClientRect();
-    const leftPct = ((e.clientX - rect.left) / rect.width) * 100;
-    const topPct = ((e.clientY - rect.top) / rect.height) * 100;
-    if(bg && bg.startsWith('url(')){ makeMarker(leftPct, topPct, bg); return; }
-    const file = e.dataTransfer.files[0];
-    if(file){
-      readImageFile(file, dataURL=> makeMarker(leftPct, topPct, `url(${dataURL})`));
-    }
-  });
-
   document.addEventListener('click', function(e){
     const panelClose = e.target.closest('.panel-close');
     if(panelClose){ togglePanel(panelClose.dataset.panel); return; }
@@ -536,9 +545,30 @@
   });
 
   // ---------- Export to PNG ----------
+  function pinCssVarsForExport(){
+    const root = document.documentElement;
+    const computed = getComputedStyle(root);
+    const varNames = ['--bg','--panel','--line','--ink','--dim','--accent','--accent-dim','--danger','--font-display','--font-body'];
+    let css = '#sheet, #sheet *{';
+    varNames.forEach(v=>{ css += `${v}: ${computed.getPropertyValue(v).trim()} !important;`; });
+    css += '}';
+    const styleEl = document.createElement('style');
+    styleEl.id = 'exportVarOverride';
+    styleEl.textContent = css;
+    document.head.appendChild(styleEl);
+  }
+  function unpinCssVarsForExport(){
+    const el = document.getElementById('exportVarOverride');
+    if(el) el.remove();
+  }
   async function exportPng(){
+    if(typeof html2canvas === 'undefined'){
+      showToast("La bibliothèque d'export image n'a pas pu se charger (connexion internet ?). Réessaie, ou utilise \"Imprimer / PDF\".");
+      return;
+    }
     const sheetEl = document.getElementById('sheet');
     sheetEl.classList.add('exporting');
+    pinCssVarsForExport();
     try{
       const canvas = await html2canvas(sheetEl, { backgroundColor: null, scale: 2 });
       canvas.toBlob(blob=>{
@@ -556,6 +586,7 @@
       showToast("Erreur lors de l'export en image. Réessaie, ou utilise \"Imprimer / PDF\".");
     } finally {
       sheetEl.classList.remove('exporting');
+      unpinCssVarsForExport();
     }
   }
   document.getElementById('exportPngBtn').addEventListener('click', exportPng);
