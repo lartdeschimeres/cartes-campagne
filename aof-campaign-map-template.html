@@ -927,7 +927,10 @@
       return JSON.parse(raw);
     }catch(err){ return null; }
   }
-  function hasAutosave(){ return !!localStorage.getItem(AUTOSAVE_KEY); }
+  function hasAutosave(){
+    try{ return !!localStorage.getItem(AUTOSAVE_KEY); }
+    catch(err){ return false; }
+  }
 
   // ---------- New (blank) map ----------
   function newMap(){
