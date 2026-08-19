@@ -136,17 +136,19 @@
     padding-bottom:8px; border-bottom:1px solid rgba(169,134,63,0.4);
   }
   .legend{ top:24px; left:24px; width:300px; }
-  .legend-row{ display:flex; gap:10px; margin-bottom:12px; align-items:flex-start; position:relative; padding-right:18px;}
+  .legend-row{ display:flex; gap:8px; margin-bottom:12px; align-items:flex-start; position:relative; padding-right:18px;}
   .legend-row:last-child{margin-bottom:0;}
+  .symbol-color{ width:20px; height:20px; flex:0 0 auto; margin-top:0; border:1px solid var(--gold); border-radius:4px; cursor:pointer; background:none; }
   .swatch{ width:22px; height:22px; flex:0 0 auto; margin-top:2px; border:1px solid var(--gold); border-radius:2px; transform:rotate(45deg); }
   .swatch.has-icon{ border-color:transparent; background-color:transparent; }
+  .icon-slot.has-icon[data-color]{ filter: brightness(0) saturate(100%) invert(50%) sepia(100%) saturate(200%) hue-rotate(var(--symbol-hue)) !important; }
   .legend-text{flex:1; min-width:0;}
   .legend-text .t{font-size:15px; font-weight:600; font-family:var(--font-display);}
   .legend-text .d{font-size:12.5px; color:#c9bda1; line-height:1.35; font-style:italic; font-family:var(--font-body);}
 
   .factions{ left:24px; bottom:24px; width:520px; }
   .faction-grid{ display:flex; flex-wrap:wrap; gap:10px 26px; }
-  .fac-row{ display:flex; gap:10px; margin-bottom:6px; align-items:flex-start; position:relative; padding-right:16px; width:calc(50% - 13px);}
+  .fac-row{ display:flex; gap:8px; margin-bottom:6px; align-items:flex-start; position:relative; padding-right:16px; width:calc(50% - 13px);}
   .fac-icon{width:20px; height:20px; flex:0 0 auto; border:1px solid var(--gold); margin-top:2px;}
   .fac-icon.has-icon{ border-color:transparent; background-color:transparent; }
   .fac-text{flex:1; min-width:0;}
@@ -277,16 +279,19 @@
     <div id="legendRows">
       <div class="legend-row">
         <button class="row-remove" title="Supprimer">×</button>
+        <input type="color" class="symbol-color" value="#a9863f" title="Couleur du symbole">
         <div class="swatch icon-slot"><input type="file" class="icon-input" accept="image/*"></div>
         <div class="legend-text"><div class="t" contenteditable="true" data-ph="Nom du symbole"></div><div class="d" contenteditable="true" data-ph="Description courte"></div></div>
       </div>
       <div class="legend-row">
         <button class="row-remove" title="Supprimer">×</button>
+        <input type="color" class="symbol-color" value="#a9863f" title="Couleur du symbole">
         <div class="swatch icon-slot"><input type="file" class="icon-input" accept="image/*"></div>
         <div class="legend-text"><div class="t" contenteditable="true" data-ph="Nom du symbole"></div><div class="d" contenteditable="true" data-ph="Description courte"></div></div>
       </div>
       <div class="legend-row">
         <button class="row-remove" title="Supprimer">×</button>
+        <input type="color" class="symbol-color" value="#a9863f" title="Couleur du symbole">
         <div class="swatch icon-slot"><input type="file" class="icon-input" accept="image/*"></div>
         <div class="legend-text"><div class="t" contenteditable="true" data-ph="Nom du symbole"></div><div class="d" contenteditable="true" data-ph="Description courte"></div></div>
       </div>
@@ -300,11 +305,13 @@
     <div class="faction-grid" id="factionRows">
       <div class="fac-row">
         <button class="row-remove" title="Supprimer">×</button>
+        <input type="color" class="symbol-color" value="#a9863f" title="Couleur du symbole">
         <div class="fac-icon icon-slot"><input type="file" class="icon-input" accept="image/*"></div>
         <div class="fac-text"><div class="t" contenteditable="true" data-ph="Royaume / Armée A"></div><div class="d" contenteditable="true" data-ph="Rôle sur le champ"></div></div>
       </div>
       <div class="fac-row">
         <button class="row-remove" title="Supprimer">×</button>
+        <input type="color" class="symbol-color" value="#a9863f" title="Couleur du symbole">
         <div class="fac-icon icon-slot"><input type="file" class="icon-input" accept="image/*"></div>
         <div class="fac-text"><div class="t" contenteditable="true" data-ph="Royaume / Armée B"></div><div class="d" contenteditable="true" data-ph="Rôle sur le champ"></div></div>
       </div>
@@ -318,6 +325,7 @@
     <div class="sup-grid" id="supportRows">
       <div class="fac-row">
         <button class="row-remove" title="Supprimer">×</button>
+        <input type="color" class="symbol-color" value="#a9863f" title="Couleur du symbole">
         <div class="fac-icon icon-slot"><input type="file" class="icon-input" accept="image/*"></div>
         <div class="fac-text"><div class="t" contenteditable="true" data-ph="Unité alliée"></div><div class="d" contenteditable="true" data-ph="Détail"></div></div>
       </div>
@@ -352,7 +360,7 @@
   <button id="newMapBtn" title="Remettre la carte à vide">Nouvelle carte</button>
   <button id="undoBtn" title="Annuler (Ctrl+Z)">↶ Annuler</button>
   <button id="redoBtn" title="Rétablir (Ctrl+Y)">↷ Rétablir</button>
-  <span style="color:#6b5228; font-size:10px; padding:0 6px;">v2.2</span>
+  <span style="color:#6b5228; font-size:10px; padding:0 6px;">v2.3</span>
   <input type="file" id="loadProjectInput" accept="application/json,.json" style="display:none">
 </div>
 
@@ -445,28 +453,61 @@
   function applyRowData(row, data){
     if(!data) return;
     const iconSlot = row.querySelector('.icon-slot');
+    const colorInput = row.querySelector('.symbol-color');
     if(data.icon){ iconSlot.style.backgroundImage = `url(${data.icon})`; iconSlot.classList.add('has-icon'); iconSlot.draggable = true; }
+    if(data.color && colorInput){ colorInput.value = data.color; applySymbolColor(row); }
     if(data.t !== undefined) row.querySelector('.t').innerHTML = data.t;
     if(data.d !== undefined) row.querySelector('.d').innerHTML = data.d;
+  }
+  function applySymbolColor(row){
+    const colorInput = row.querySelector('.symbol-color');
+    const iconSlot = row.querySelector('.icon-slot');
+    if(!colorInput || !iconSlot) return;
+    const color = colorInput.value;
+    if(color && iconSlot.classList.contains('has-icon')){
+      iconSlot.dataset.color = color;
+      const hue = hexToHue(color);
+      iconSlot.style.setProperty('--symbol-hue', hue + 'deg');
+    } else {
+      delete iconSlot.dataset.color;
+      iconSlot.style.removeProperty('--symbol-hue');
+    }
+  }
+  function hexToHue(hex) {
+    const r = parseInt(hex.slice(1, 3), 16) / 255;
+    const g = parseInt(hex.slice(3, 5), 16) / 255;
+    const b = parseInt(hex.slice(5, 7), 16) / 255;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let hue = 0;
+    if (max === min) hue = 0;
+    else if (max === r) hue = 60 * ((g - b) / (max - min)) % 360;
+    else if (max === g) hue = 60 * ((b - r) / (max - min)) + 120;
+    else hue = 60 * ((r - g) / (max - min)) + 240;
+    return hue < 0 ? hue + 360 : hue;
   }
   function addLegendRow(data){
     const row = document.createElement('div');
     row.className = 'legend-row';
     row.innerHTML = `<button class="row-remove" title="Supprimer">×</button>
+      <input type="color" class="symbol-color" value="#a9863f" title="Couleur du symbole">
       <div class="swatch icon-slot"><input type="file" class="icon-input" accept="image/*"></div>
       <div class="legend-text"><div class="t" contenteditable="true" data-ph="Nom du symbole"></div><div class="d" contenteditable="true" data-ph="Description courte"></div></div>`;
     document.getElementById('legendRows').appendChild(row);
     applyRowData(row, data);
+    row.querySelector('.symbol-color').addEventListener('input', () => applySymbolColor(row));
     return row;
   }
   function addFacRow(containerId, nameHint, detailHint, data){
     const row = document.createElement('div');
     row.className = 'fac-row';
     row.innerHTML = `<button class="row-remove" title="Supprimer">×</button>
+      <input type="color" class="symbol-color" value="#a9863f" title="Couleur du symbole">
       <div class="fac-icon icon-slot"><input type="file" class="icon-input" accept="image/*"></div>
       <div class="fac-text"><div class="t" contenteditable="true" data-ph="${nameHint}"></div><div class="d" contenteditable="true" data-ph="${detailHint}"></div></div>`;
     document.getElementById(containerId).appendChild(row);
     applyRowData(row, data);
+    row.querySelector('.symbol-color').addEventListener('input', () => applySymbolColor(row));
     return row;
   }
 
@@ -1068,8 +1109,10 @@
   }
   function serializeRow(row){
     const iconSlot = row.querySelector('.icon-slot');
+    const colorInput = row.querySelector('.symbol-color');
     return {
       icon: urlFromBg(iconSlot.style.backgroundImage),
+      color: colorInput ? colorInput.value : null,
       t: row.querySelector('.t').innerHTML,
       d: row.querySelector('.d').innerHTML
     };

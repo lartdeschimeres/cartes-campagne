@@ -29,6 +29,14 @@ Chaque petit symbole vide (rond ou carré) à côté d'un nom est une zone d'upl
 1. Clique dessus pour choisir une image (idéalement un **PNG à fond transparent** pour un rendu propre).
 2. Ou glisse-dépose ton image directement dessus.
 
+### Choisir la couleur des symboles
+À gauche de chaque icône se trouve un **sélecteur de couleur** (petit carré coloré). Ce sélecteur permet de **teinter l'icône** avec la couleur de ton choix :
+- Clique sur le sélecteur pour ouvrir la palette de couleurs.
+- Choisis une couleur : l'icône sera automatiquement teintée avec cette couleur.
+- La couleur est **sauvegardée avec le projet** et sera restaurée lors du chargement.
+
+**Astuce :** Pour un meilleur résultat, utilise des icônes **noires ou blanches** en PNG transparent. Les icônes colorées peuvent ne pas bien réagir à la teinte.
+
 ## 4. Ajouter / supprimer des lignes
 
 En bas de chaque panneau (**Légende / Points remarquables**, **Factions**, **Soutien**), un bouton **"+ Ajouter..."** permet de créer autant de lignes que nécessaire.
@@ -67,6 +75,8 @@ Menu déroulant **"Palette de couleurs"**, juste à côté du choix de police. 5
 
 - **GF** : Teal Tactique, Rouge Sanglant, Vert Toxique, Or Impérial, Violet Psychique.
 - **AoF** : Vieux Monde, Royaume Vert, Sang et Acier, Glace et Os, Sable Doré.
+
+**Note :** La palette de couleurs affecte les éléments d'interface (fond, texte, bordures), tandis que le **sélecteur de couleur des symboles** (voir section 3) permet de personnaliser individuellement chaque icône.
 
 ## 9. Sauvegarder et recharger un projet
 
