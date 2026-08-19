@@ -8,10 +8,10 @@ Ce mode opératoire couvre les deux templates (`gf-campaign-map-template.html` e
 
 ## 1. Charger le relief de terrain
 
-1. Clique n'importe où sur la grande zone centrale (le fond de la carte).
+1. Utilise le bouton **"Changer le terrain"** dans la barre d'outils en bas de l'écran.
 2. Choisis ton image de terrain (relief, heightmap, rendu Blender, etc.) depuis ton ordinateur.
-3. Tu peux aussi glisser-déposer l'image directement sur cette zone.
-4. Pour la remplacer, utilise le bouton **"Changer le terrain"** dans la barre d'outils en bas de l'écran.
+3. Tu peux aussi glisser-déposer l'image directement sur la zone centrale.
+4. Pour la remplacer, utilise à nouveau le bouton **"Changer le terrain"**.
 5. Une fois l'image en place, deux réglages sont disponibles :
    - **Curseur d'échelle** (à côté du bouton "Changer le terrain") : zoome ou dézoome le terrain.
    - **Glisser l'image directement** : clique dessus et déplace la souris pour la repositionner dans le cadre.
@@ -35,7 +35,14 @@ Chaque petit symbole vide (rond ou carré) à côté d'un nom est une zone d'upl
 - Choisis une couleur : l'icône sera automatiquement teintée avec cette couleur.
 - La couleur est **sauvegardée avec le projet** et sera restaurée lors du chargement.
 
-**Astuce :** Pour un meilleur résultat, utilise des icônes **noires ou blanches** en PNG transparent. Les icônes colorées peuvent ne pas bien réagir à la teinte.
+**Fonctionne avec :**
+- **PNG transparent** (idéalement noir ou blanc) : teinture via filtre CSS
+- **SVG** : le programme **modifie directement le code SVG** pour changer les attributs `fill` et `stroke`
+- **JPG/WebP** : teinture via filtre CSS (résultat variable selon l'image)
+
+**Astuce :** Pour un meilleur résultat, utilise des icônes **noires ou blanches** (PNG ou SVG) avec un fond transparent.
+
+**Note pour les SVG :** Si ton SVG contient des attributs `fill` ou `stroke` avec des couleurs spécifiques, elles seront remplacées par la couleur choisie.
 
 ## 4. Ajouter / supprimer des lignes
 

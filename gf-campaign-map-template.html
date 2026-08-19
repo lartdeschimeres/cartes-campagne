@@ -352,7 +352,7 @@
   <button id="newMapBtn" title="Remettre la carte à vide">Nouvelle carte</button>
   <button id="undoBtn" title="Annuler (Ctrl+Z)">↶ Annuler</button>
   <button id="redoBtn" title="Rétablir (Ctrl+Y)">↷ Rétablir</button>
-  <span style="color:#6b5228; font-size:10px; padding:0 6px;">v2.3</span>
+  <span style="color:#6b5228; font-size:10px; padding:0 6px;">v2.4</span>
   <input type="file" id="loadProjectInput" accept="application/json,.json" style="display:none">
 </div>
 
@@ -411,7 +411,8 @@
   });
   document.addEventListener('pointerup', ()=>{ terrainPan = null; });
 
-  slot.addEventListener('click', ()=>{ if(!slot.querySelector('img')) input.click(); });
+  // Clic sur le terrain désactivé - utiliser le bouton "Changer le terrain" dans la barre d'outils
+  // slot.addEventListener('click', ()=>{ if(!slot.querySelector('img')) input.click(); });
   input.addEventListener('change', (e)=>{
     const file = e.target.files[0];
     if(!file) return;
@@ -446,8 +447,20 @@
     if(!data) return;
     const iconSlot = row.querySelector('.icon-slot');
     const colorInput = row.querySelector('.symbol-color');
-    if(data.icon){ iconSlot.style.backgroundImage = `url(${data.icon})`; iconSlot.classList.add('has-icon'); iconSlot.draggable = true; }
-    if(data.color && colorInput){ colorInput.value = data.color; applySymbolColor(row); }
+    if(data.icon){ 
+      iconSlot.style.backgroundImage = `url(${data.icon})`; 
+      iconSlot.classList.add('has-icon'); 
+      iconSlot.draggable = true; 
+    }
+    if(data.color && colorInput){ 
+      colorInput.value = data.color; 
+      // Attendre que l'image soit chargée avant d'appliquer la couleur
+      if(data.icon && iconSlot.style.backgroundImage.includes('svg')){
+        setTimeout(() => applySymbolColor(row), 100);
+      } else {
+        applySymbolColor(row);
+      }
+    }
     if(data.t !== undefined) row.querySelector('.t').innerHTML = data.t;
     if(data.d !== undefined) row.querySelector('.d').innerHTML = data.d;
   }
@@ -456,13 +469,70 @@
     const iconSlot = row.querySelector('.icon-slot');
     if(!colorInput || !iconSlot) return;
     const color = colorInput.value;
-    if(color && iconSlot.classList.contains('has-icon')){
-      iconSlot.dataset.color = color;
-      const hue = hexToHue(color);
-      iconSlot.style.setProperty('--symbol-hue', hue + 'deg');
+    const bgImage = iconSlot.style.backgroundImage;
+    if(color && iconSlot.classList.contains('has-icon') && bgImage){
+      const urlMatch = bgImage.match(/url\(['"]?(.*?)['"]?\)/);
+      if(urlMatch && urlMatch[1]){
+        const imageUrl = urlMatch[1];
+        // Si c'est un SVG, on va le colorer directement
+        if(imageUrl.toLowerCase().endsWith('.svg') || imageUrl.includes('data:image/svg+xml')){
+          colorizeSvgIcon(iconSlot, imageUrl, color);
+        } else {
+          // Pour les PNG/JPG, on utilise le filtre CSS
+          iconSlot.dataset.color = color;
+          const hue = hexToHue(color);
+          iconSlot.style.setProperty('--symbol-hue', hue + 'deg');
+        }
+      }
     } else {
       delete iconSlot.dataset.color;
       iconSlot.style.removeProperty('--symbol-hue');
+      // Réinitialiser le SVG si pas de couleur
+      const bgImage = iconSlot.style.backgroundImage;
+      if(bgImage && (bgImage.includes('.svg') || bgImage.includes('data:image/svg+xml'))){
+        const urlMatch = bgImage.match(/url\(['"]?(.*?)['"]?\)/);
+        if(urlMatch && urlMatch[1]){
+          iconSlot.style.backgroundImage = `url(${urlMatch[1]})`;
+        }
+      }
+    }
+  }
+  
+  // Fonction pour colorer un SVG directement
+  async function colorizeSvgIcon(iconSlot, svgUrl, color) {
+    try {
+      let svgContent;
+      if(svgUrl.startsWith('data:image/svg+xml')){
+        // SVG en base64
+        const base64Data = svgUrl.replace('data:image/svg+xml;base64,', '');
+        svgContent = atob(base64Data);
+      } else if(svgUrl.startsWith('data:')){
+        // SVG en data URL (non base64)
+        svgContent = decodeURIComponent(svgUrl.replace('data:image/svg+xml,', ''));
+      } else {
+        // SVG externe - on ne peut pas le modifier directement, on utilise le filtre CSS
+        iconSlot.dataset.color = color;
+        const hue = hexToHue(color);
+        iconSlot.style.setProperty('--symbol-hue', hue + 'deg');
+        return;
+      }
+      
+      // Remplacer les couleurs dans le SVG
+      const coloredSvg = svgContent
+        .replace(/fill="[^"]*"/g, `fill="${color}"`)
+        .replace(/stroke="[^"]*"/g, `stroke="${color}"`)
+        .replace(/currentColor/g, color);
+      
+      // Créer une nouvelle data URL
+      const newSvgUrl = 'data:image/svg+xml;base64,' + btoa(coloredSvg);
+      iconSlot.style.backgroundImage = `url(${newSvgUrl})`;
+      iconSlot.dataset.color = color;
+    } catch(err) {
+      console.error('Erreur coloration SVG:', err);
+      // Fallback au filtre CSS
+      iconSlot.dataset.color = color;
+      const hue = hexToHue(color);
+      iconSlot.style.setProperty('--symbol-hue', hue + 'deg');
     }
   }
   function hexToHue(hex) {
