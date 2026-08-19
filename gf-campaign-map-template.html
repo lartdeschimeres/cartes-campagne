@@ -352,7 +352,7 @@
   <button id="newMapBtn" title="Remettre la carte à vide">Nouvelle carte</button>
   <button id="undoBtn" title="Annuler (Ctrl+Z)">↶ Annuler</button>
   <button id="redoBtn" title="Rétablir (Ctrl+Y)">↷ Rétablir</button>
-  <span style="color:#6b5228; font-size:10px; padding:0 6px;">v2.4</span>
+  <span style="color:#6b5228; font-size:10px; padding:0 6px;">v2.5</span>
   <input type="file" id="loadProjectInput" accept="application/json,.json" style="display:none">
 </div>
 
@@ -499,16 +499,19 @@
   }
   
   // Fonction pour colorer un SVG directement
-  async function colorizeSvgIcon(iconSlot, svgUrl, color) {
+  function colorizeSvgIcon(iconSlot, svgUrl, color) {
     try {
       let svgContent;
-      if(svgUrl.startsWith('data:image/svg+xml')){
+      if(svgUrl.startsWith('data:image/svg+xml;base64,')){
         // SVG en base64
         const base64Data = svgUrl.replace('data:image/svg+xml;base64,', '');
         svgContent = atob(base64Data);
-      } else if(svgUrl.startsWith('data:')){
+      } else if(svgUrl.startsWith('data:image/svg+xml,')){
         // SVG en data URL (non base64)
         svgContent = decodeURIComponent(svgUrl.replace('data:image/svg+xml,', ''));
+      } else if(svgUrl.startsWith('data:')){
+        // Autre data URL
+        svgContent = decodeURIComponent(svgUrl.split(',')[1]);
       } else {
         // SVG externe - on ne peut pas le modifier directement, on utilise le filtre CSS
         iconSlot.dataset.color = color;
@@ -518,13 +521,17 @@
       }
       
       // Remplacer les couleurs dans le SVG
-      const coloredSvg = svgContent
+      let coloredSvg = svgContent
         .replace(/fill="[^"]*"/g, `fill="${color}"`)
         .replace(/stroke="[^"]*"/g, `stroke="${color}"`)
         .replace(/currentColor/g, color);
       
+      // Nettoyer les attributs vides
+      coloredSvg = coloredSvg.replace(/fill=""/g, 'fill="' + color + '"');
+      coloredSvg = coloredSvg.replace(/stroke=""/g, 'stroke="' + color + '"');
+      
       // Créer une nouvelle data URL
-      const newSvgUrl = 'data:image/svg+xml;base64,' + btoa(coloredSvg);
+      const newSvgUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(coloredSvg)));
       iconSlot.style.backgroundImage = `url(${newSvgUrl})`;
       iconSlot.dataset.color = color;
     } catch(err) {
@@ -644,7 +651,7 @@
   let justDraggedMarker = null;
   let dragState = null;
 
-  function makeMarker(leftPct, topPct, bgImage, size, layer){
+  function makeMarker(leftPct, topPct, bgImage, size, layer, color){
     const marker = document.createElement('div');
     marker.className = 'map-marker icon-slot' + (bgImage ? ' has-icon' : '');
     marker.style.left = leftPct + '%';
@@ -652,10 +659,40 @@
     marker.dataset.layer = layer || activeLayerName;
     if(size){ marker.style.width = size + 'px'; marker.style.height = size + 'px'; }
     if(bgImage){ marker.style.backgroundImage = bgImage; }
-    marker.innerHTML = '<input type="file" class="icon-input" accept="image/*"><button class="row-remove" title="Supprimer">×</button><div class="resize-handle" title="Redimensionner"></div>';
+    if(color){ marker.dataset.color = color; }
+    marker.innerHTML = '<input type="color" class="symbol-color" value="#6fd8c9" title="Couleur du symbole"><input type="file" class="icon-input" accept="image/*"><button class="row-remove" title="Supprimer">×</button><div class="resize-handle" title="Redimensionner"></div>';
     mapLayer.appendChild(marker);
     applyLayerVisibility();
+    // Ajouter l'événement pour le sélecteur de couleur
+    const colorInput = marker.querySelector('.symbol-color');
+    if(colorInput && color) colorInput.value = color;
+    if(colorInput) colorInput.addEventListener('input', () => applyMarkerColor(marker));
+    // Appliquer la couleur initiale si elle existe
+    if(color) applyMarkerColor(marker);
     return marker;
+  }
+  
+  function applyMarkerColor(marker){
+    const colorInput = marker.querySelector('.symbol-color');
+    if(!colorInput) return;
+    const color = colorInput.value;
+    const bgImage = marker.style.backgroundImage;
+    if(color && marker.classList.contains('has-icon') && bgImage){
+      const urlMatch = bgImage.match(/url\(['"]?(.*?)['"]?\)/);
+      if(urlMatch && urlMatch[1]){
+        const imageUrl = urlMatch[1];
+        if(imageUrl.toLowerCase().endsWith('.svg') || imageUrl.includes('data:image/svg+xml')){
+          colorizeSvgIcon(marker, imageUrl, color);
+        } else {
+          marker.dataset.color = color;
+          const hue = hexToHue(color);
+          marker.style.setProperty('--symbol-hue', hue + 'deg');
+        }
+      }
+    } else {
+      delete marker.dataset.color;
+      marker.style.removeProperty('--symbol-hue');
+    }
   }
   document.getElementById('addMarkerBtn').addEventListener('click', ()=>{ pushHistory(); makeMarker(50, 50, null); });
   // ---------- Free-text labels on the map ----------
@@ -1158,12 +1195,14 @@
   }
   function serializeMarker(marker){
     const w = parseFloat(marker.style.width);
+    const colorInput = marker.querySelector('.symbol-color');
     return {
       left: parseFloat(marker.style.left),
       top: parseFloat(marker.style.top),
       size: isNaN(w) ? null : w,
       layer: marker.dataset.layer || activeLayerName,
-      icon: urlFromBg(marker.style.backgroundImage)
+      icon: urlFromBg(marker.style.backgroundImage),
+      color: colorInput ? colorInput.value : null
     };
   }
   function saveProject(){
@@ -1249,7 +1288,7 @@
     activeLayerName = state.activeLayer || (layers[0] && layers[0].name) || 'Par défaut';
     renderLayersUI();
     document.getElementById('mapLayer').innerHTML = '';
-    (state.markers || []).forEach(m => makeMarker(m.left, m.top, m.icon ? `url(${m.icon})` : null, m.size, m.layer));
+    (state.markers || []).forEach(m => makeMarker(m.left, m.top, m.icon ? `url(${m.icon})` : null, m.size, m.layer, m.color));
     (state.labels || []).forEach(l => makeLabel(l.left, l.top, l.text, l.layer));
 
     setPanelVisible('legend', state.legendVisible !== false);

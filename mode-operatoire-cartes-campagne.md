@@ -30,19 +30,19 @@ Chaque petit symbole vide (rond ou carré) à côté d'un nom est une zone d'upl
 2. Ou glisse-dépose ton image directement dessus.
 
 ### Choisir la couleur des symboles
-À gauche de chaque icône se trouve un **sélecteur de couleur** (petit carré coloré). Ce sélecteur permet de **teinter l'icône** avec la couleur de ton choix :
+À gauche de chaque icône (dans les panneaux **Légende**, **Factions**, **Soutien**) **ET sur chaque marqueur posé sur la carte** se trouve un **sélecteur de couleur** (petit carré coloré). Ce sélecteur permet de **teinter l'icône** avec la couleur de ton choix :
 - Clique sur le sélecteur pour ouvrir la palette de couleurs.
 - Choisis une couleur : l'icône sera automatiquement teintée avec cette couleur.
 - La couleur est **sauvegardée avec le projet** et sera restaurée lors du chargement.
 
 **Fonctionne avec :**
+- **SVG** : le programme **modifie directement le code SVG** pour changer les attributs `fill` et `stroke` → **Résultat parfait !**
 - **PNG transparent** (idéalement noir ou blanc) : teinture via filtre CSS
-- **SVG** : le programme **modifie directement le code SVG** pour changer les attributs `fill` et `stroke`
 - **JPG/WebP** : teinture via filtre CSS (résultat variable selon l'image)
 
 **Astuce :** Pour un meilleur résultat, utilise des icônes **noires ou blanches** (PNG ou SVG) avec un fond transparent.
 
-**Note pour les SVG :** Si ton SVG contient des attributs `fill` ou `stroke` avec des couleurs spécifiques, elles seront remplacées par la couleur choisie.
+**Note pour les SVG :** Si ton SVG contient des attributs `fill` ou `stroke` avec des couleurs spécifiques, elles seront automatiquement remplacées par la couleur choisie.
 
 ## 4. Ajouter / supprimer des lignes
 
