@@ -360,7 +360,7 @@
   <button id="newMapBtn" title="Remettre la carte à vide">Nouvelle carte</button>
   <button id="undoBtn" title="Annuler (Ctrl+Z)">↶ Annuler</button>
   <button id="redoBtn" title="Rétablir (Ctrl+Y)">↷ Rétablir</button>
-  <span style="color:#6b5228; font-size:10px; padding:0 6px;">v2.6</span>
+  <span style="color:#6b5228; font-size:10px; padding:0 6px;">v2.7</span>
   <input type="file" id="loadProjectInput" accept="application/json,.json" style="display:none">
 </div>
 
@@ -1172,23 +1172,49 @@
     const sheetEl = document.getElementById('sheet');
     sheetEl.classList.add('exporting');
     pinCssVarsForExport();
-    // Force a fixed pixel size INLINE on the sheet itself (not just via class),
-    // because html2canvas clones the node into a sandbox iframe where the
-    // viewport may be narrower than 1600px and `aspect-ratio` + `max-width:100%`
-    // would otherwise re-shrink it, squashing the exported image.
+    
+    // Sauvegarder les styles actuels
     const prevStyle = sheetEl.getAttribute('style') || '';
+    const prevWidth = sheetEl.style.width;
+    const prevHeight = sheetEl.style.height;
+    const prevMaxWidth = sheetEl.style.maxWidth;
+    const prevAspectRatio = sheetEl.style.aspectRatio;
+    const prevTransform = sheetEl.style.transform;
+    
+    // Forcer la taille native pour l'export
     sheetEl.style.width = '1600px';
     sheetEl.style.height = '920px';
     sheetEl.style.maxWidth = 'none';
     sheetEl.style.aspectRatio = 'auto';
     sheetEl.style.transform = 'none';
-    // The body uses flex centering which can also constrain the sheet; relax it.
+    
+    // Désactiver le flex centering du body qui peut contraindre la feuille
     const prevBodyJustify = document.body.style.justifyContent;
     const prevBodyAlign = document.body.style.alignItems;
     const prevBodyDisplay = document.body.style.display;
     document.body.style.display = 'block';
+    document.body.style.justifyContent = '';
+    document.body.style.alignItems = '';
+    
+    // Forcer le sheet à ne pas être affectée par le viewport
+    sheetEl.style.position = 'absolute';
+    sheetEl.style.left = '0';
+    sheetEl.style.top = '0';
+    
     try{
-      const canvas = await html2canvas(sheetEl, { backgroundColor: null, scale: 2, width: 1600, height: 920, windowWidth: 1600, windowHeight: 920 });
+      // Utiliser useCORS: true pour éviter les problèmes de cross-origin avec les images
+      const canvas = await html2canvas(sheetEl, { 
+        backgroundColor: null, 
+        scale: 2, 
+        width: 1600, 
+        height: 920, 
+        windowWidth: 1600, 
+        windowHeight: 920,
+        useCORS: true,
+        allowTaint: true,
+        logging: false
+      });
+      
       canvas.toBlob(blob=>{
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -1201,10 +1227,21 @@
         URL.revokeObjectURL(url);
       });
     } catch(err){
+      console.error('Erreur export PNG:', err);
       showToast("Erreur lors de l'export en image. Réessaie, ou utilise \"Imprimer / PDF\".");
     } finally {
+      // Restaurer tous les styles
       sheetEl.classList.remove('exporting');
       sheetEl.setAttribute('style', prevStyle);
+      sheetEl.style.width = prevWidth;
+      sheetEl.style.height = prevHeight;
+      sheetEl.style.maxWidth = prevMaxWidth;
+      sheetEl.style.aspectRatio = prevAspectRatio;
+      sheetEl.style.transform = prevTransform;
+      sheetEl.style.position = '';
+      sheetEl.style.left = '';
+      sheetEl.style.top = '';
+      
       document.body.style.display = prevBodyDisplay;
       document.body.style.justifyContent = prevBodyJustify;
       document.body.style.alignItems = prevBodyAlign;
