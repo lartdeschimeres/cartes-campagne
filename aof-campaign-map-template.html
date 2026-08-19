@@ -360,7 +360,7 @@
   <button id="newMapBtn" title="Remettre la carte à vide">Nouvelle carte</button>
   <button id="undoBtn" title="Annuler (Ctrl+Z)">↶ Annuler</button>
   <button id="redoBtn" title="Rétablir (Ctrl+Y)">↷ Rétablir</button>
-  <span style="color:#6b5228; font-size:10px; padding:0 6px;">v2.5</span>
+  <span style="color:#6b5228; font-size:10px; padding:0 6px;">v2.6</span>
   <input type="file" id="loadProjectInput" accept="application/json,.json" style="display:none">
 </div>
 
@@ -519,7 +519,8 @@
         svgContent = decodeURIComponent(svgUrl.replace('data:image/svg+xml,', ''));
       } else if(svgUrl.startsWith('data:')){
         // Autre data URL
-        svgContent = decodeURIComponent(svgUrl.split(',')[1]);
+        const parts = svgUrl.split(',');
+        svgContent = decodeURIComponent(parts[parts.length - 1]);
       } else {
         // SVG externe - on ne peut pas le modifier directement, on utilise le filtre CSS
         iconSlot.dataset.color = color;
@@ -528,15 +529,18 @@
         return;
       }
       
-      // Remplacer les couleurs dans le SVG
+      // Remplacer TOUTES les occurrences de fill et stroke
       let coloredSvg = svgContent
-        .replace(/fill="[^"]*"/g, `fill="${color}"`)
-        .replace(/stroke="[^"]*"/g, `stroke="${color}"`)
+        .replace(/fill=["']?#[^"'\s>]*/g, `fill="${color}"`)
+        .replace(/fill=["']?[^"'\s>]*/g, `fill="${color}"`)
+        .replace(/stroke=["']?#[^"'\s>]*/g, `stroke="${color}"`)
+        .replace(/stroke=["']?[^"'\s>]*/g, `stroke="${color}"`)
         .replace(/currentColor/g, color);
       
-      // Nettoyer les attributs vides
-      coloredSvg = coloredSvg.replace(/fill=""/g, 'fill="' + color + '"');
-      coloredSvg = coloredSvg.replace(/stroke=""/g, 'stroke="' + color + '"');
+      // S'assurer que le SVG a bien un namespace
+      if(!coloredSvg.includes('xmlns=')) {
+        coloredSvg = coloredSvg.replace(/<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+      }
       
       // Créer une nouvelle data URL
       const newSvgUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(coloredSvg)));
@@ -544,6 +548,7 @@
       iconSlot.dataset.color = color;
     } catch(err) {
       console.error('Erreur coloration SVG:', err);
+      console.log('URL:', svgUrl);
       // Fallback au filtre CSS
       iconSlot.dataset.color = color;
       const hue = hexToHue(color);
