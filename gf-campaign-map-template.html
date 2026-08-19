@@ -129,19 +129,17 @@
     padding-bottom:8px; border-bottom:1px solid var(--line);
   }
   .legend{ top:26px; left:26px; width:300px; }
-  .legend-row{ display:flex; gap:8px; margin-bottom:12px; align-items:flex-start; position:relative; padding-right:18px;}
+  .legend-row{ display:flex; gap:10px; margin-bottom:12px; align-items:flex-start; position:relative; padding-right:18px;}
   .legend-row:last-child{margin-bottom:0;}
-  .symbol-color{ width:20px; height:20px; flex:0 0 auto; margin-top:0; border:1px solid var(--line); border-radius:4px; cursor:pointer; background:none; }
   .swatch{ width:22px; height:22px; flex:0 0 auto; margin-top:2px; border:1px solid var(--line); border-radius:50%; }
   .swatch.has-icon{ border-color:transparent; background-color:transparent; }
-  .icon-slot.has-icon[data-color]{ filter: brightness(0) saturate(100%) invert(50%) sepia(100%) saturate(200%) hue-rotate(var(--symbol-hue)) !important; }
   .legend-text{flex:1; min-width:0;}
   .legend-text .t{font-size:15px; font-weight:600; letter-spacing:0.5px; font-family:var(--font-display);}
   .legend-text .d{font-size:12.5px; color:var(--dim); line-height:1.35; font-family:var(--font-body);}
 
   .factions{ left:26px; bottom:26px; width:520px; }
   .faction-grid{ display:flex; flex-wrap:wrap; gap:10px 26px; }
-  .fac-row{ display:flex; gap:8px; margin-bottom:6px; align-items:flex-start; position:relative; padding-right:16px; width:calc(50% - 13px);}
+  .fac-row{ display:flex; gap:10px; margin-bottom:6px; align-items:flex-start; position:relative; padding-right:16px; width:calc(50% - 13px);}
   .fac-icon{width:20px; height:20px; flex:0 0 auto; border:1px solid var(--line); margin-top:2px;}
   .fac-icon.has-icon{ border-color:transparent; background-color:transparent; }
   .fac-text{flex:1; min-width:0;}
@@ -271,19 +269,16 @@
     <div id="legendRows">
       <div class="legend-row">
         <button class="row-remove" title="Supprimer">×</button>
-        <input type="color" class="symbol-color" value="#6fd8c9" title="Couleur du symbole">
         <div class="swatch icon-slot"><input type="file" class="icon-input" accept="image/*"></div>
         <div class="legend-text"><div class="t" contenteditable="true" data-ph="Nom du symbole"></div><div class="d" contenteditable="true" data-ph="Description courte"></div></div>
       </div>
       <div class="legend-row">
         <button class="row-remove" title="Supprimer">×</button>
-        <input type="color" class="symbol-color" value="#6fd8c9" title="Couleur du symbole">
         <div class="swatch icon-slot"><input type="file" class="icon-input" accept="image/*"></div>
         <div class="legend-text"><div class="t" contenteditable="true" data-ph="Nom du symbole"></div><div class="d" contenteditable="true" data-ph="Description courte"></div></div>
       </div>
       <div class="legend-row">
         <button class="row-remove" title="Supprimer">×</button>
-        <input type="color" class="symbol-color" value="#6fd8c9" title="Couleur du symbole">
         <div class="swatch icon-slot"><input type="file" class="icon-input" accept="image/*"></div>
         <div class="legend-text"><div class="t" contenteditable="true" data-ph="Nom du symbole"></div><div class="d" contenteditable="true" data-ph="Description courte"></div></div>
       </div>
@@ -297,13 +292,11 @@
     <div class="faction-grid" id="factionRows">
       <div class="fac-row">
         <button class="row-remove" title="Supprimer">×</button>
-        <input type="color" class="symbol-color" value="#6fd8c9" title="Couleur du symbole">
         <div class="fac-icon icon-slot"><input type="file" class="icon-input" accept="image/*"></div>
         <div class="fac-text"><div class="t" contenteditable="true" data-ph="Faction A"></div><div class="d" contenteditable="true" data-ph="Rôle sur le champ"></div></div>
       </div>
       <div class="fac-row">
         <button class="row-remove" title="Supprimer">×</button>
-        <input type="color" class="symbol-color" value="#6fd8c9" title="Couleur du symbole">
         <div class="fac-icon icon-slot"><input type="file" class="icon-input" accept="image/*"></div>
         <div class="fac-text"><div class="t" contenteditable="true" data-ph="Faction B"></div><div class="d" contenteditable="true" data-ph="Rôle sur le champ"></div></div>
       </div>
@@ -317,7 +310,6 @@
     <div class="sup-grid" id="supportRows">
       <div class="fac-row">
         <button class="row-remove" title="Supprimer">×</button>
-        <input type="color" class="symbol-color" value="#6fd8c9" title="Couleur du symbole">
         <div class="fac-icon icon-slot"><input type="file" class="icon-input" accept="image/*"></div>
         <div class="fac-text"><div class="t" contenteditable="true" data-ph="Unité de soutien"></div><div class="d" contenteditable="true" data-ph="Détail"></div></div>
       </div>
@@ -352,7 +344,7 @@
   <button id="newMapBtn" title="Remettre la carte à vide">Nouvelle carte</button>
   <button id="undoBtn" title="Annuler (Ctrl+Z)">↶ Annuler</button>
   <button id="redoBtn" title="Rétablir (Ctrl+Y)">↷ Rétablir</button>
-  <span style="color:#6b5228; font-size:10px; padding:0 6px;">v2.7</span>
+  <span style="color:#6b5228; font-size:10px; padding:0 6px;">v2.2</span>
   <input type="file" id="loadProjectInput" accept="application/json,.json" style="display:none">
 </div>
 
@@ -411,8 +403,7 @@
   });
   document.addEventListener('pointerup', ()=>{ terrainPan = null; });
 
-  // Clic sur le terrain désactivé - utiliser le bouton "Changer le terrain" dans la barre d'outils
-  // slot.addEventListener('click', ()=>{ if(!slot.querySelector('img')) input.click(); });
+  slot.addEventListener('click', ()=>{ if(!slot.querySelector('img')) input.click(); });
   input.addEventListener('change', (e)=>{
     const file = e.target.files[0];
     if(!file) return;
@@ -446,143 +437,28 @@
   function applyRowData(row, data){
     if(!data) return;
     const iconSlot = row.querySelector('.icon-slot');
-    const colorInput = row.querySelector('.symbol-color');
-    if(data.icon){ 
-      iconSlot.style.backgroundImage = `url(${data.icon})`; 
-      iconSlot.classList.add('has-icon'); 
-      iconSlot.draggable = true; 
-    }
-    if(data.color && colorInput){ 
-      colorInput.value = data.color; 
-      // Attendre que l'image soit chargée avant d'appliquer la couleur
-      if(data.icon && iconSlot.style.backgroundImage.includes('svg')){
-        setTimeout(() => applySymbolColor(row), 100);
-      } else {
-        applySymbolColor(row);
-      }
-    }
+    if(data.icon){ iconSlot.style.backgroundImage = `url(${data.icon})`; iconSlot.classList.add('has-icon'); iconSlot.draggable = true; }
     if(data.t !== undefined) row.querySelector('.t').innerHTML = data.t;
     if(data.d !== undefined) row.querySelector('.d').innerHTML = data.d;
-  }
-  function applySymbolColor(row){
-    const colorInput = row.querySelector('.symbol-color');
-    const iconSlot = row.querySelector('.icon-slot');
-    if(!colorInput || !iconSlot) return;
-    const color = colorInput.value;
-    const bgImage = iconSlot.style.backgroundImage;
-    if(color && iconSlot.classList.contains('has-icon') && bgImage){
-      const urlMatch = bgImage.match(/url\(['"]?(.*?)['"]?\)/);
-      if(urlMatch && urlMatch[1]){
-        const imageUrl = urlMatch[1];
-        // Si c'est un SVG, on va le colorer directement
-        if(imageUrl.toLowerCase().endsWith('.svg') || imageUrl.includes('data:image/svg+xml')){
-          colorizeSvgIcon(iconSlot, imageUrl, color);
-        } else {
-          // Pour les PNG/JPG, on utilise le filtre CSS
-          iconSlot.dataset.color = color;
-          const hue = hexToHue(color);
-          iconSlot.style.setProperty('--symbol-hue', hue + 'deg');
-        }
-      }
-    } else {
-      delete iconSlot.dataset.color;
-      iconSlot.style.removeProperty('--symbol-hue');
-      // Réinitialiser le SVG si pas de couleur
-      const bgImage = iconSlot.style.backgroundImage;
-      if(bgImage && (bgImage.includes('.svg') || bgImage.includes('data:image/svg+xml'))){
-        const urlMatch = bgImage.match(/url\(['"]?(.*?)['"]?\)/);
-        if(urlMatch && urlMatch[1]){
-          iconSlot.style.backgroundImage = `url(${urlMatch[1]})`;
-        }
-      }
-    }
-  }
-  
-  // Fonction pour colorer un SVG directement
-  function colorizeSvgIcon(iconSlot, svgUrl, color) {
-    try {
-      let svgContent;
-      if(svgUrl.startsWith('data:image/svg+xml;base64,')){
-        // SVG en base64
-        const base64Data = svgUrl.replace('data:image/svg+xml;base64,', '');
-        svgContent = atob(base64Data);
-      } else if(svgUrl.startsWith('data:image/svg+xml,')){
-        // SVG en data URL (non base64)
-        svgContent = decodeURIComponent(svgUrl.replace('data:image/svg+xml,', ''));
-      } else if(svgUrl.startsWith('data:')){
-        // Autre data URL
-        const parts = svgUrl.split(',');
-        svgContent = decodeURIComponent(parts[parts.length - 1]);
-      } else {
-        // SVG externe - on ne peut pas le modifier directement, on utilise le filtre CSS
-        iconSlot.dataset.color = color;
-        const hue = hexToHue(color);
-        iconSlot.style.setProperty('--symbol-hue', hue + 'deg');
-        return;
-      }
-      
-      // Remplacer TOUTES les occurrences de fill et stroke, même avec des espaces ou autres attributs
-      // Gérer fill="#000000", fill='#000000', fill=#000000, fill="black", etc.
-      let coloredSvg = svgContent
-        .replace(/fill=["']?#[^"'\s>]*/g, `fill="${color}"`)
-        .replace(/fill=["']?[^"'\s>]*/g, `fill="${color}"`)
-        .replace(/stroke=["']?#[^"'\s>]*/g, `stroke="${color}"`)
-        .replace(/stroke=["']?[^"'\s>]*/g, `stroke="${color}"`)
-        .replace(/currentColor/g, color);
-      
-      // S'assurer que le SVG a bien un namespace
-      if(!coloredSvg.includes('xmlns=')) {
-        coloredSvg = coloredSvg.replace(/<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
-      }
-      
-      // Créer une nouvelle data URL
-      const newSvgUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(coloredSvg)));
-      iconSlot.style.backgroundImage = `url(${newSvgUrl})`;
-      iconSlot.dataset.color = color;
-    } catch(err) {
-      console.error('Erreur coloration SVG:', err);
-      console.log('URL:', svgUrl);
-      // Fallback au filtre CSS
-      iconSlot.dataset.color = color;
-      const hue = hexToHue(color);
-      iconSlot.style.setProperty('--symbol-hue', hue + 'deg');
-    }
-  }
-  function hexToHue(hex) {
-    const r = parseInt(hex.slice(1, 3), 16) / 255;
-    const g = parseInt(hex.slice(3, 5), 16) / 255;
-    const b = parseInt(hex.slice(5, 7), 16) / 255;
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    let hue = 0;
-    if (max === min) hue = 0;
-    else if (max === r) hue = 60 * ((g - b) / (max - min)) % 360;
-    else if (max === g) hue = 60 * ((b - r) / (max - min)) + 120;
-    else hue = 60 * ((r - g) / (max - min)) + 240;
-    return hue < 0 ? hue + 360 : hue;
   }
   function addLegendRow(data){
     const row = document.createElement('div');
     row.className = 'legend-row';
     row.innerHTML = `<button class="row-remove" title="Supprimer">×</button>
-      <input type="color" class="symbol-color" value="#6fd8c9" title="Couleur du symbole">
       <div class="swatch icon-slot"><input type="file" class="icon-input" accept="image/*"></div>
       <div class="legend-text"><div class="t" contenteditable="true" data-ph="Nom du symbole"></div><div class="d" contenteditable="true" data-ph="Description courte"></div></div>`;
     document.getElementById('legendRows').appendChild(row);
     applyRowData(row, data);
-    row.querySelector('.symbol-color').addEventListener('input', () => applySymbolColor(row));
     return row;
   }
   function addFacRow(containerId, nameHint, detailHint, data){
     const row = document.createElement('div');
     row.className = 'fac-row';
     row.innerHTML = `<button class="row-remove" title="Supprimer">×</button>
-      <input type="color" class="symbol-color" value="#6fd8c9" title="Couleur du symbole">
       <div class="fac-icon icon-slot"><input type="file" class="icon-input" accept="image/*"></div>
       <div class="fac-text"><div class="t" contenteditable="true" data-ph="${nameHint}"></div><div class="d" contenteditable="true" data-ph="${detailHint}"></div></div>`;
     document.getElementById(containerId).appendChild(row);
     applyRowData(row, data);
-    row.querySelector('.symbol-color').addEventListener('input', () => applySymbolColor(row));
     return row;
   }
 
@@ -657,7 +533,7 @@
   let justDraggedMarker = null;
   let dragState = null;
 
-  function makeMarker(leftPct, topPct, bgImage, size, layer, color){
+  function makeMarker(leftPct, topPct, bgImage, size, layer){
     const marker = document.createElement('div');
     marker.className = 'map-marker icon-slot' + (bgImage ? ' has-icon' : '');
     marker.style.left = leftPct + '%';
@@ -665,40 +541,10 @@
     marker.dataset.layer = layer || activeLayerName;
     if(size){ marker.style.width = size + 'px'; marker.style.height = size + 'px'; }
     if(bgImage){ marker.style.backgroundImage = bgImage; }
-    if(color){ marker.dataset.color = color; }
-    marker.innerHTML = '<input type="color" class="symbol-color" value="#6fd8c9" title="Couleur du symbole"><input type="file" class="icon-input" accept="image/*"><button class="row-remove" title="Supprimer">×</button><div class="resize-handle" title="Redimensionner"></div>';
+    marker.innerHTML = '<input type="file" class="icon-input" accept="image/*"><button class="row-remove" title="Supprimer">×</button><div class="resize-handle" title="Redimensionner"></div>';
     mapLayer.appendChild(marker);
     applyLayerVisibility();
-    // Ajouter l'événement pour le sélecteur de couleur
-    const colorInput = marker.querySelector('.symbol-color');
-    if(colorInput && color) colorInput.value = color;
-    if(colorInput) colorInput.addEventListener('input', () => applyMarkerColor(marker));
-    // Appliquer la couleur initiale si elle existe
-    if(color) applyMarkerColor(marker);
     return marker;
-  }
-  
-  function applyMarkerColor(marker){
-    const colorInput = marker.querySelector('.symbol-color');
-    if(!colorInput) return;
-    const color = colorInput.value;
-    const bgImage = marker.style.backgroundImage;
-    if(color && marker.classList.contains('has-icon') && bgImage){
-      const urlMatch = bgImage.match(/url\(['"]?(.*?)['"]?\)/);
-      if(urlMatch && urlMatch[1]){
-        const imageUrl = urlMatch[1];
-        if(imageUrl.toLowerCase().endsWith('.svg') || imageUrl.includes('data:image/svg+xml')){
-          colorizeSvgIcon(marker, imageUrl, color);
-        } else {
-          marker.dataset.color = color;
-          const hue = hexToHue(color);
-          marker.style.setProperty('--symbol-hue', hue + 'deg');
-        }
-      }
-    } else {
-      delete marker.dataset.color;
-      marker.style.removeProperty('--symbol-hue');
-    }
   }
   document.getElementById('addMarkerBtn').addEventListener('click', ()=>{ pushHistory(); makeMarker(50, 50, null); });
   // ---------- Free-text labels on the map ----------
@@ -1142,49 +988,23 @@
     const sheetEl = document.getElementById('sheet');
     sheetEl.classList.add('exporting');
     pinCssVarsForExport();
-    
-    // Sauvegarder les styles actuels
+    // Force a fixed pixel size INLINE on the sheet itself (not just via class),
+    // because html2canvas clones the node into a sandbox iframe where the
+    // viewport may be narrower than 1600px and `aspect-ratio` + `max-width:100%`
+    // would otherwise re-shrink it, squashing the exported image.
     const prevStyle = sheetEl.getAttribute('style') || '';
-    const prevWidth = sheetEl.style.width;
-    const prevHeight = sheetEl.style.height;
-    const prevMaxWidth = sheetEl.style.maxWidth;
-    const prevAspectRatio = sheetEl.style.aspectRatio;
-    const prevTransform = sheetEl.style.transform;
-    
-    // Forcer la taille native pour l'export
     sheetEl.style.width = '1600px';
     sheetEl.style.height = '920px';
     sheetEl.style.maxWidth = 'none';
     sheetEl.style.aspectRatio = 'auto';
     sheetEl.style.transform = 'none';
-    
-    // Désactiver le flex centering du body qui peut contraindre la feuille
+    // The body uses flex centering which can also constrain the sheet; relax it.
     const prevBodyJustify = document.body.style.justifyContent;
     const prevBodyAlign = document.body.style.alignItems;
     const prevBodyDisplay = document.body.style.display;
     document.body.style.display = 'block';
-    document.body.style.justifyContent = '';
-    document.body.style.alignItems = '';
-    
-    // Forcer le sheet à ne pas être affectée par le viewport
-    sheetEl.style.position = 'absolute';
-    sheetEl.style.left = '0';
-    sheetEl.style.top = '0';
-    
     try{
-      // Utiliser useCORS: true pour éviter les problèmes de cross-origin avec les images
-      const canvas = await html2canvas(sheetEl, { 
-        backgroundColor: null, 
-        scale: 2, 
-        width: 1600, 
-        height: 920, 
-        windowWidth: 1600, 
-        windowHeight: 920,
-        useCORS: true,
-        allowTaint: true,
-        logging: false
-      });
-      
+      const canvas = await html2canvas(sheetEl, { backgroundColor: null, scale: 2, width: 1600, height: 920, windowWidth: 1600, windowHeight: 920 });
       canvas.toBlob(blob=>{
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -1197,21 +1017,10 @@
         URL.revokeObjectURL(url);
       });
     } catch(err){
-      console.error('Erreur export PNG:', err);
       showToast("Erreur lors de l'export en image. Réessaie, ou utilise \"Imprimer / PDF\".");
     } finally {
-      // Restaurer tous les styles
       sheetEl.classList.remove('exporting');
       sheetEl.setAttribute('style', prevStyle);
-      sheetEl.style.width = prevWidth;
-      sheetEl.style.height = prevHeight;
-      sheetEl.style.maxWidth = prevMaxWidth;
-      sheetEl.style.aspectRatio = prevAspectRatio;
-      sheetEl.style.transform = prevTransform;
-      sheetEl.style.position = '';
-      sheetEl.style.left = '';
-      sheetEl.style.top = '';
-      
       document.body.style.display = prevBodyDisplay;
       document.body.style.justifyContent = prevBodyJustify;
       document.body.style.alignItems = prevBodyAlign;
@@ -1228,24 +1037,20 @@
   }
   function serializeRow(row){
     const iconSlot = row.querySelector('.icon-slot');
-    const colorInput = row.querySelector('.symbol-color');
     return {
       icon: urlFromBg(iconSlot.style.backgroundImage),
-      color: colorInput ? colorInput.value : null,
       t: row.querySelector('.t').innerHTML,
       d: row.querySelector('.d').innerHTML
     };
   }
   function serializeMarker(marker){
     const w = parseFloat(marker.style.width);
-    const colorInput = marker.querySelector('.symbol-color');
     return {
       left: parseFloat(marker.style.left),
       top: parseFloat(marker.style.top),
       size: isNaN(w) ? null : w,
       layer: marker.dataset.layer || activeLayerName,
-      icon: urlFromBg(marker.style.backgroundImage),
-      color: colorInput ? colorInput.value : null
+      icon: urlFromBg(marker.style.backgroundImage)
     };
   }
   function saveProject(){
@@ -1331,7 +1136,7 @@
     activeLayerName = state.activeLayer || (layers[0] && layers[0].name) || 'Par défaut';
     renderLayersUI();
     document.getElementById('mapLayer').innerHTML = '';
-    (state.markers || []).forEach(m => makeMarker(m.left, m.top, m.icon ? `url(${m.icon})` : null, m.size, m.layer, m.color));
+    (state.markers || []).forEach(m => makeMarker(m.left, m.top, m.icon ? `url(${m.icon})` : null, m.size, m.layer));
     (state.labels || []).forEach(l => makeLabel(l.left, l.top, l.text, l.layer));
 
     setPanelVisible('legend', state.legendVisible !== false);

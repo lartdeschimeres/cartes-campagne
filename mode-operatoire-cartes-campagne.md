@@ -8,10 +8,10 @@ Ce mode opératoire couvre les deux templates (`gf-campaign-map-template.html` e
 
 ## 1. Charger le relief de terrain
 
-1. Utilise le bouton **"Changer le terrain"** dans la barre d'outils en bas de l'écran.
+1. Clique n'importe où sur la grande zone centrale (le fond de la carte).
 2. Choisis ton image de terrain (relief, heightmap, rendu Blender, etc.) depuis ton ordinateur.
-3. Tu peux aussi glisser-déposer l'image directement sur la zone centrale.
-4. Pour la remplacer, utilise à nouveau le bouton **"Changer le terrain"**.
+3. Tu peux aussi glisser-déposer l'image directement sur cette zone.
+4. Pour la remplacer, utilise le bouton **"Changer le terrain"** dans la barre d'outils en bas de l'écran.
 5. Une fois l'image en place, deux réglages sont disponibles :
    - **Curseur d'échelle** (à côté du bouton "Changer le terrain") : zoome ou dézoome le terrain.
    - **Glisser l'image directement** : clique dessus et déplace la souris pour la repositionner dans le cadre.
@@ -28,21 +28,6 @@ Tous les textes sont directement modifiables :
 Chaque petit symbole vide (rond ou carré) à côté d'un nom est une zone d'upload :
 1. Clique dessus pour choisir une image (idéalement un **PNG à fond transparent** pour un rendu propre).
 2. Ou glisse-dépose ton image directement dessus.
-
-### Choisir la couleur des symboles
-À gauche de chaque icône (dans les panneaux **Légende**, **Factions**, **Soutien**) **ET sur chaque marqueur posé sur la carte** se trouve un **sélecteur de couleur** (petit carré coloré). Ce sélecteur permet de **teinter l'icône** avec la couleur de ton choix :
-- Clique sur le sélecteur pour ouvrir la palette de couleurs.
-- Choisis une couleur : l'icône sera automatiquement teintée avec cette couleur.
-- La couleur est **sauvegardée avec le projet** et sera restaurée lors du chargement.
-
-**Fonctionne avec :**
-- **SVG** : le programme **modifie directement le code SVG** pour changer les attributs `fill` et `stroke` → **Résultat parfait !**
-- **PNG transparent** (idéalement noir ou blanc) : teinture via filtre CSS
-- **JPG/WebP** : teinture via filtre CSS (résultat variable selon l'image)
-
-**Astuce :** Pour un meilleur résultat, utilise des icônes **noires ou blanches** (PNG ou SVG) avec un fond transparent.
-
-**Note pour les SVG :** Si ton SVG contient des attributs `fill` ou `stroke` avec des couleurs spécifiques, elles seront automatiquement remplacées par la couleur choisie.
 
 ## 4. Ajouter / supprimer des lignes
 
@@ -82,8 +67,6 @@ Menu déroulant **"Palette de couleurs"**, juste à côté du choix de police. 5
 
 - **GF** : Teal Tactique, Rouge Sanglant, Vert Toxique, Or Impérial, Violet Psychique.
 - **AoF** : Vieux Monde, Royaume Vert, Sang et Acier, Glace et Os, Sable Doré.
-
-**Note :** La palette de couleurs affecte les éléments d'interface (fond, texte, bordures), tandis que le **sélecteur de couleur des symboles** (voir section 3) permet de personnaliser individuellement chaque icône.
 
 ## 9. Sauvegarder et recharger un projet
 
