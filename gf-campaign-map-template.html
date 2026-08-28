@@ -23,7 +23,7 @@
     --panel: rgba(18,20,20,0.72);
     --line: rgba(150,175,175,0.28);
     --ink: #d7e4e2;
-    --dim: #7d908d;
+    --dim: #a8bab7;
     --accent: #6fd8c9;
     --accent-dim: rgba(111,216,201,0.35);
     --danger: #c94b4b;
@@ -35,8 +35,8 @@
     margin:0; background:#000;
     font-family:var(--font-display);
     color:var(--ink);
-    display:flex; align-items:center; justify-content:center;
-    min-height:100vh; padding:24px;
+    display:flex; align-items:flex-start; justify-content:center;
+    min-height:100vh; padding:24px 24px 180px 24px;
   }
   .sheet{
     width:1600px; max-width:100%; aspect-ratio:16/9.2;
@@ -66,6 +66,14 @@
   }
   .terrain-slot input{display:none;}
 
+  .grid-overlay{
+    position:absolute; inset:0; z-index:2; pointer-events:none; display:none;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.12) 0, rgba(255,255,255,0.12) 1px, transparent 1px, transparent 40px),
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.12) 0, rgba(255,255,255,0.12) 1px, transparent 1px, transparent 40px);
+  }
+  .grid-overlay.visible{ display:block; }
+  .sheet.exporting .grid-overlay{ display:none !important; }
   .map-layer{ position:absolute; inset:0; z-index:4; pointer-events:none; }
   .map-marker{
     position:absolute; width:32px; height:32px; transform:translate(-50%,-50%);
@@ -84,6 +92,59 @@
   }
   .map-marker:hover .resize-handle{opacity:0.9;}
   .resize-handle:hover{opacity:1 !important;}
+  .map-marker .rotate-handle{
+    position:absolute; top:-22px; left:50%; transform:translateX(-50%);
+    width:10px; height:10px; border-radius:50%; background:var(--accent);
+    border:1px solid #0a0e12; cursor:grab; opacity:0; transition:opacity 0.15s; z-index:3;
+  }
+  .map-marker:hover .rotate-handle{opacity:0.9;}
+  .rotate-handle:hover{opacity:1 !important;}
+  .map-marker .skew-handle{
+    position:absolute; left:-6px; bottom:-6px; width:9px; height:9px;
+    background:var(--accent); border:1px solid #0a0e12; cursor:ew-resize;
+    opacity:0; transition:opacity 0.15s; z-index:3; transform:rotate(45deg);
+  }
+  .map-marker:hover .skew-handle{opacity:0.9;}
+  .skew-handle:hover{opacity:1 !important;}
+  .arrow-layer{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+  .arrow-path{ fill:none; vector-effect:non-scaling-stroke; transform-box:fill-box; transform-origin:center; pointer-events:stroke; cursor:grab; }
+  .arrow-path.layer-hidden{ pointer-events:none; }
+  .arrow-curve-handle{
+    display:none; position:absolute; width:11px; height:11px; border-radius:50%;
+    background:var(--danger); border:1px solid #0a0e12; cursor:move;
+    transform:translate(-50%,-50%); z-index:4; pointer-events:auto; opacity:0.65; transition:opacity 0.15s;
+  }
+  .arrow-curve-handle.active{ display:block; }
+  .arrow-curve-handle:hover{opacity:1;}
+  .arrow-path.standard{ stroke:var(--accent); stroke-width:4; }
+  .arrow-path.double{ stroke:var(--accent); stroke-width:4; }
+  .arrow-path.dashed{ stroke:var(--accent); stroke-width:3; stroke-dasharray:14 10; }
+  .arrow-path.bold{ stroke:var(--danger); stroke-width:8; }
+  .arrow-path.curve{ stroke:var(--accent); stroke-width:3; stroke-dasharray:1 8; stroke-linecap:round; }
+  .arrow-path.layer-hidden{ display:none !important; }
+  .arrow-handle{
+    position:absolute; width:14px; height:14px; transform:translate(-50%,-50%);
+    border-radius:50%; background:var(--accent); border:2px solid #0a0e12;
+    cursor:grab; z-index:4; pointer-events:auto; opacity:0.7; transition:opacity 0.15s;
+  }
+  .arrow-handle:hover{opacity:1;}
+  .arrow-handle:active{cursor:grabbing;}
+  .arrow-handle .row-remove{opacity:0; top:-8px; right:-8px; width:20px; height:20px; background:rgba(11,13,14,0.85); border-radius:50%;}
+  .arrow-handle:hover .row-remove{opacity:0.9;}
+  .arrow-rotate-handle{
+    position:absolute; width:11px; height:11px; border-radius:50%;
+    background:var(--accent); border:1px solid #0a0e12; cursor:grab;
+    transform:translate(-50%, calc(-50% - 22px)); z-index:4; pointer-events:auto;
+    opacity:0.55; transition:opacity 0.15s;
+  }
+  .arrow-rotate-handle:hover{opacity:1;}
+  .arrow-skew-handle{
+    position:absolute; width:10px; height:10px;
+    background:var(--accent); border:1px solid #0a0e12; cursor:ew-resize;
+    transform:translate(-50%, calc(-50% + 22px)) rotate(45deg); z-index:4; pointer-events:auto;
+    opacity:0.55; transition:opacity 0.15s;
+  }
+  .arrow-skew-handle:hover{opacity:1;}
   .map-label{
     position:absolute; transform:translate(-50%,-50%); z-index:4; pointer-events:auto;
     min-width:20px; max-width:320px; padding:2px 8px;
@@ -104,7 +165,11 @@
   }
   .map-label:hover .layer-badge{opacity:0.9;}
 
-  header{ position:absolute; top:26px; right:36px; z-index:6; text-align:right; max-width:520px;}
+  header{
+    position:absolute; top:26px; right:36px; z-index:6; text-align:right; max-width:520px;
+    background:var(--panel); border:1px solid var(--line); backdrop-filter:blur(2px);
+    padding:14px 20px;
+  }
   header .brand{
     font-family:var(--font-body); font-size:11px; color:var(--dim);
     letter-spacing:3px; text-transform:uppercase; margin-bottom:10px;
@@ -150,7 +215,7 @@
   .sup-grid{ display:flex; flex-wrap:wrap; gap:10px 24px; }
   .support .fac-row{ width:calc(50% - 12px); }
 
-  .icon-slot{ background-color:rgba(255,255,255,0.7);
+  .icon-slot{
     cursor:pointer; position:relative; overflow:hidden;
     background-size:cover; background-position:center; background-repeat:no-repeat;
     transition:border-color 0.15s;
@@ -161,7 +226,6 @@
     content:'+'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
     font-size:13px; color:var(--dim); font-family:var(--font-body); pointer-events:none;
   }
-  .icon-slot.has-icon{ background-color:rgba(255,255,255,0.7) !important; }
   .icon-slot.has-icon::after{content:'';}
 
   .row-remove{
@@ -225,27 +289,22 @@
     text-transform:uppercase; cursor:pointer;
   }
   .toolbar button:hover{background:rgba(111,216,201,0.12);}
-  @media print{ .toolbar{display:none;} body{padding:0;} .row-remove, .add-row{display:none;} }
+  @media print{ .toolbar{display:none;} body{padding:0;} .row-remove, .add-row, .resize-handle, .rotate-handle, .skew-handle, .arrow-handle, .arrow-rotate-handle, .arrow-skew-handle, .arrow-curve-handle, .grid-overlay{display:none;} }
   .sheet.exporting .add-row,
   .sheet.exporting .panel-close,
   .sheet.exporting .row-remove,
   .sheet.exporting .resize-handle,
+  .sheet.exporting .rotate-handle,
+  .sheet.exporting .skew-handle,
+  .sheet.exporting .arrow-handle,
+  .sheet.exporting .arrow-rotate-handle,
+  .sheet.exporting .arrow-skew-handle,
+  .sheet.exporting .arrow-curve-handle,
   .sheet.exporting .map-label .row-remove,
   .sheet.exporting .icon-slot::after{ display:none !important; }
   .sheet.exporting .terrain-slot{ filter:none !important; }
-  .sheet.exporting .panel{ backdrop-filter:none !important; }
+  .sheet.exporting .panel, .sheet.exporting header{ backdrop-filter:none !important; }
   .sheet.exporting::before{ opacity:0.45 !important; }
-  /* Freeze the sheet at its native pixel size during PNG export so html2canvas
-     captures the full 1600x920 canvas regardless of the viewport width.
-     html2canvas mis-handles `aspect-ratio` + `max-width:100%`, which caused the
-     squashed/stretched exports. */
-  .sheet.exporting{
-    width:1600px !important;
-    max-width:none !important;
-    aspect-ratio:auto !important;
-    height:920px !important;
-    transform:none !important;
-  }
 </style>
 </head>
 <body>
@@ -256,7 +315,20 @@
     <input type="file" id="terrainInput" accept="image/*">
   </div>
 
-  <div class="map-layer" id="mapLayer"></div>
+  <div class="grid-overlay" id="gridOverlay"></div>
+
+  <div class="map-layer" id="mapLayer">
+    <svg id="arrowLayer" class="arrow-layer" viewBox="0 0 1600 920" preserveAspectRatio="none">
+      <defs>
+        <marker id="arrowHeadStd" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+          <path d="M0,0 L10,5 L0,10 Z" style="fill:var(--accent)"/>
+        </marker>
+        <marker id="arrowHeadBold" markerWidth="15" markerHeight="15" refX="12" refY="7.5" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+          <path d="M0,0 L15,7.5 L0,15 Z" style="fill:var(--danger)"/>
+        </marker>
+      </defs>
+    </svg>
+  </div>
 
   <header>
     <div class="brand" contenteditable="true" data-ph="+++ NOM DE CAMPAGNE +++"></div>
@@ -328,11 +400,27 @@
 
 <div class="toolbar">
   <button onclick="window.print()">Imprimer / PDF</button>
+  <select id="exportFormatSelect" title="Format d'export">
+    <option value="16:9">Format : 16:9 (écran)</option>
+    <option value="a4-landscape">Format : A4 Paysage</option>
+    <option value="a4-portrait">Format : A4 Portrait</option>
+    <option value="a3-landscape">Format : A3 Paysage</option>
+    <option value="a3-portrait">Format : A3 Portrait</option>
+  </select>
   <button id="exportPngBtn">Exporter en PNG</button>
   <button onclick="document.getElementById('terrainInput').click()">Changer le terrain</button>
   <input type="range" id="terrainZoom" min="20" max="300" value="100" title="Échelle du terrain (glisser l'image pour la repositionner)">
+  <button id="gridToggleBtn" class="panel-toggle" title="Afficher/masquer la grille">Grille</button>
   <button id="addMarkerBtn">+ Marqueur</button>
   <button id="addLabelBtn">+ Étiquette</button>
+  <select id="arrowTypeSelect" title="Type de flèche">
+    <option value="standard">Flèche : Standard</option>
+    <option value="double">Flèche : Double</option>
+    <option value="dashed">Flèche : Pointillée</option>
+    <option value="bold">Flèche : Renfort (épaisse)</option>
+    <option value="curve">Flèche : Flanc (courbe)</option>
+  </select>
+  <button id="addArrowBtn">+ Flèche</button>
   <button class="panel-toggle" data-panel="legend">Légende</button>
   <button class="panel-toggle" data-panel="layers">Calques</button>
   <select id="activeLayerSelect" title="Calque actif (où placer les nouveaux marqueurs)"></select>
@@ -345,7 +433,7 @@
   <button id="newMapBtn" title="Remettre la carte à vide">Nouvelle carte</button>
   <button id="undoBtn" title="Annuler (Ctrl+Z)">↶ Annuler</button>
   <button id="redoBtn" title="Rétablir (Ctrl+Y)">↷ Rétablir</button>
-  <span style="color:#6b5228; font-size:10px; padding:0 6px;">v2.3</span>
+  <span style="color:#6b5228; font-size:10px; padding:0 6px;">v2.7</span>
   <input type="file" id="loadProjectInput" accept="application/json,.json" style="display:none">
 </div>
 
@@ -385,7 +473,7 @@
 
   function updateTerrainTransform(){
     const img = slot.querySelector('img');
-    if(img) img.style.transform = `translate(${terrainOffsetX}px, ${terrainOffsetY}px) scale(${terrainScale})`;
+    if(img) img.style.transform = `translate(${terrainOffsetX}%, ${terrainOffsetY}%) scale(${terrainScale})`;
   }
   terrainZoom.addEventListener('input', ()=>{
     terrainScale = terrainZoom.value / 100;
@@ -394,12 +482,13 @@
   document.addEventListener('pointerdown', e=>{
     const img = e.target.closest('#terrainSlot img');
     if(!img) return;
-    terrainPan = { startX:e.clientX, startY:e.clientY, baseX:terrainOffsetX, baseY:terrainOffsetY };
+    terrainPan = { startX:e.clientX, startY:e.clientY, baseX:terrainOffsetX, baseY:terrainOffsetY, rect: slot.getBoundingClientRect() };
   });
   document.addEventListener('pointermove', e=>{
     if(!terrainPan) return;
-    terrainOffsetX = terrainPan.baseX + (e.clientX - terrainPan.startX);
-    terrainOffsetY = terrainPan.baseY + (e.clientY - terrainPan.startY);
+    const r = terrainPan.rect;
+    terrainOffsetX = terrainPan.baseX + ((e.clientX - terrainPan.startX) / r.width) * 100;
+    terrainOffsetY = terrainPan.baseY + ((e.clientY - terrainPan.startY) / r.height) * 100;
     updateTerrainTransform();
   });
   document.addEventListener('pointerup', ()=>{ terrainPan = null; });
@@ -504,6 +593,7 @@
           l.name = newName;
           document.querySelectorAll(`#mapLayer .map-marker[data-layer="${cssEscape(oldName)}"]`).forEach(m=>{ m.dataset.layer = newName; });
           document.querySelectorAll(`#mapLayer .map-label[data-layer="${cssEscape(oldName)}"]`).forEach(m=>{ m.dataset.layer = newName; });
+          document.querySelectorAll(`#arrowLayer .arrow-path[data-layer="${cssEscape(oldName)}"]`).forEach(p=>{ p.dataset.layer = newName; });
           if(activeLayerName === oldName) activeLayerName = newName;
           renderLayersUI();
           scheduleAutosave();
@@ -519,11 +609,19 @@
     if(badge){ badge.textContent = '▸ ' + (el.dataset.layer || 'Par défaut'); }
   }
   function applyLayerVisibility(){
-    document.querySelectorAll('#mapLayer .map-marker, #mapLayer .map-label').forEach(m=>{
+    document.querySelectorAll('#mapLayer .map-marker, #mapLayer .map-label, #mapLayer .arrow-handle').forEach(m=>{
       updateLayerBadge(m);
       const ln = m.dataset.layer || 'Par défaut';
       const layer = layers.find(l=>l.name === ln) || { visible:true };
       m.classList.toggle('layer-hidden', !layer.visible);
+    });
+    document.querySelectorAll('#arrowLayer .arrow-path').forEach(p=>{
+      const ln = p.dataset.layer || 'Par défaut';
+      const layer = layers.find(l=>l.name === ln) || { visible:true };
+      const hidden = !layer.visible;
+      p.classList.toggle('layer-hidden', hidden);
+      const id = p.dataset.id;
+      document.querySelectorAll(`.arrow-handle[data-id="${id}"], .arrow-rotate-handle[data-id="${id}"], .arrow-skew-handle[data-id="${id}"]`).forEach(h=> h.classList.toggle('layer-hidden', hidden));
     });
   }
   activeLayerSelect.addEventListener('change', ()=>{ activeLayerName = activeLayerSelect.value; renderLayersUI(); });
@@ -534,16 +632,24 @@
   let justDraggedMarker = null;
   let dragState = null;
 
-  function makeMarker(leftPct, topPct, bgImage, size, layer){
+  function updateMarkerTransform(marker){
+    const rot = parseFloat(marker.dataset.rotation) || 0;
+    const skew = parseFloat(marker.dataset.skew) || 0;
+    marker.style.transform = `translate(-50%,-50%) rotate(${rot}deg) skew(${skew}deg)`;
+  }
+  function makeMarker(leftPct, topPct, bgImage, size, layer, rotation, skew){
     const marker = document.createElement('div');
     marker.className = 'map-marker icon-slot' + (bgImage ? ' has-icon' : '');
     marker.style.left = leftPct + '%';
     marker.style.top = topPct + '%';
     marker.dataset.layer = layer || activeLayerName;
+    marker.dataset.rotation = rotation || 0;
+    marker.dataset.skew = skew || 0;
     if(size){ marker.style.width = size + 'px'; marker.style.height = size + 'px'; }
     if(bgImage){ marker.style.backgroundImage = bgImage; }
-    marker.innerHTML = '<input type="file" class="icon-input" accept="image/*"><button class="row-remove" title="Supprimer">×</button><div class="resize-handle" title="Redimensionner"></div>';
+    marker.innerHTML = '<input type="file" class="icon-input" accept="image/*"><button class="row-remove" title="Supprimer">×</button><div class="resize-handle" title="Redimensionner"></div><div class="rotate-handle" title="Faire pivoter"></div><div class="skew-handle" title="Incliner (effet 3D)"></div>';
     mapLayer.appendChild(marker);
+    updateMarkerTransform(marker);
     applyLayerVisibility();
     return marker;
   }
@@ -584,8 +690,184 @@
     };
   }
 
+  // ---------- Arrows ----------
+  const arrowLayer = document.getElementById('arrowLayer');
+  let VB_W = 1600, VB_H = 920; // must match the arrowLayer viewBox; updated during export
+  let arrowCounter = 0;
+  const ARROW_TYPES = ['standard','double','dashed','bold','curve'];
+  function updateArrowPath(id){
+    const pathEl = arrowLayer.querySelector(`path[data-id="${id}"]`);
+    const startEl = mapLayer.querySelector(`.arrow-handle[data-id="${id}"][data-role="start"]`);
+    const endEl = mapLayer.querySelector(`.arrow-handle[data-id="${id}"][data-role="end"]`);
+    if(!pathEl || !startEl || !endEl) return;
+    const x1pct = parseFloat(startEl.style.left), y1pct = parseFloat(startEl.style.top);
+    const x2pct = parseFloat(endEl.style.left), y2pct = parseFloat(endEl.style.top);
+    const x1 = x1pct/100*VB_W, y1 = y1pct/100*VB_H;
+    const x2 = x2pct/100*VB_W, y2 = y2pct/100*VB_H;
+    let d;
+    const curveH = mapLayer.querySelector(`.arrow-curve-handle[data-id="${id}"]`);
+    if(pathEl.dataset.type === 'curve'){
+      const mx = (x1+x2)/2, my = (y1+y2)/2;
+      const dx = x2-x1, dy = y2-y1;
+      const len = Math.hypot(dx,dy) || 1;
+      const offsetFrac = parseFloat(pathEl.dataset.curveOffset);
+      const offset = len * (isNaN(offsetFrac) ? 0.18 : offsetFrac);
+      const nx = -dy/len, ny = dx/len;
+      const cx = mx + nx*offset, cy = my + ny*offset;
+      d = `M${x1},${y1} Q${cx},${cy} ${x2},${y2}`;
+      if(curveH){ curveH.style.left = (cx/VB_W*100) + '%'; curveH.style.top = (cy/VB_H*100) + '%'; curveH.classList.add('active'); }
+    } else {
+      d = `M${x1},${y1} L${x2},${y2}`;
+      if(curveH) curveH.classList.remove('active');
+    }
+    pathEl.setAttribute('d', d);
+    const midX = (x1pct + x2pct) / 2, midY = (y1pct + y2pct) / 2;
+    const rotH = mapLayer.querySelector(`.arrow-rotate-handle[data-id="${id}"]`);
+    const skewH = mapLayer.querySelector(`.arrow-skew-handle[data-id="${id}"]`);
+    if(rotH){ rotH.style.left = midX + '%'; rotH.style.top = midY + '%'; }
+    if(skewH){ skewH.style.left = midX + '%'; skewH.style.top = midY + '%'; }
+  }
+  function updateArrowTransform(id){
+    const pathEl = arrowLayer.querySelector(`path[data-id="${id}"]`);
+    if(!pathEl) return;
+    const rot = parseFloat(pathEl.dataset.rotation) || 0;
+    const skew = parseFloat(pathEl.dataset.skew) || 0;
+    pathEl.style.transform = `rotate(${rot}deg) skew(${skew}deg)`;
+  }
+  function makeArrow(x1, y1, x2, y2, type, layer, rotation, skew, curveOffset){
+    type = ARROW_TYPES.includes(type) ? type : 'standard';
+    const id = 'arrow' + (arrowCounter++);
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.dataset.id = id;
+    path.dataset.type = type;
+    path.dataset.layer = layer || activeLayerName;
+    path.dataset.rotation = rotation || 0;
+    path.dataset.skew = skew || 0;
+    path.dataset.curveOffset = (typeof curveOffset === 'number' && !isNaN(curveOffset)) ? curveOffset : 0.18;
+    path.setAttribute('class', 'arrow-path ' + type);
+    if(type === 'double'){ path.setAttribute('marker-start', 'url(#arrowHeadStd)'); path.setAttribute('marker-end', 'url(#arrowHeadStd)'); }
+    else if(type === 'bold'){ path.setAttribute('marker-end', 'url(#arrowHeadBold)'); }
+    else { path.setAttribute('marker-end', 'url(#arrowHeadStd)'); }
+    arrowLayer.appendChild(path);
+
+    const startHandle = document.createElement('div');
+    startHandle.className = 'arrow-handle';
+    startHandle.dataset.id = id; startHandle.dataset.role = 'start';
+    startHandle.style.left = x1 + '%'; startHandle.style.top = y1 + '%';
+    startHandle.innerHTML = '<button class="row-remove" title="Supprimer la flèche">×</button>';
+    mapLayer.appendChild(startHandle);
+
+    const endHandle = document.createElement('div');
+    endHandle.className = 'arrow-handle';
+    endHandle.dataset.id = id; endHandle.dataset.role = 'end';
+    endHandle.style.left = x2 + '%'; endHandle.style.top = y2 + '%';
+    mapLayer.appendChild(endHandle);
+
+    const rotateHandle = document.createElement('div');
+    rotateHandle.className = 'arrow-rotate-handle';
+    rotateHandle.dataset.id = id;
+    rotateHandle.title = 'Faire pivoter la flèche';
+    mapLayer.appendChild(rotateHandle);
+
+    const skewHandle = document.createElement('div');
+    skewHandle.className = 'arrow-skew-handle';
+    skewHandle.dataset.id = id;
+    skewHandle.title = 'Incliner la flèche (effet 3D)';
+    mapLayer.appendChild(skewHandle);
+
+    const curveHandle = document.createElement('div');
+    curveHandle.className = 'arrow-curve-handle';
+    curveHandle.dataset.id = id;
+    curveHandle.title = 'Ajuster la courbe';
+    mapLayer.appendChild(curveHandle);
+
+    updateArrowPath(id);
+    updateArrowTransform(id);
+    applyLayerVisibility();
+    return id;
+  }
+  function removeArrow(id){
+    arrowLayer.querySelectorAll(`path[data-id="${id}"]`).forEach(p=>p.remove());
+    mapLayer.querySelectorAll(`.arrow-handle[data-id="${id}"], .arrow-rotate-handle[data-id="${id}"], .arrow-skew-handle[data-id="${id}"], .arrow-curve-handle[data-id="${id}"]`).forEach(h=>h.remove());
+  }
+  function serializeArrow(id){
+    const pathEl = arrowLayer.querySelector(`path[data-id="${id}"]`);
+    const startEl = mapLayer.querySelector(`.arrow-handle[data-id="${id}"][data-role="start"]`);
+    const endEl = mapLayer.querySelector(`.arrow-handle[data-id="${id}"][data-role="end"]`);
+    if(!pathEl || !startEl || !endEl) return null;
+    return {
+      x1: parseFloat(startEl.style.left), y1: parseFloat(startEl.style.top),
+      x2: parseFloat(endEl.style.left), y2: parseFloat(endEl.style.top),
+      type: pathEl.dataset.type,
+      rotation: parseFloat(pathEl.dataset.rotation) || 0,
+      skew: parseFloat(pathEl.dataset.skew) || 0,
+      curveOffset: parseFloat(pathEl.dataset.curveOffset),
+      layer: pathEl.dataset.layer || activeLayerName
+    };
+  }
+  function allArrowIds(){
+    const ids = new Set();
+    mapLayer.querySelectorAll('.arrow-handle').forEach(h=> ids.add(h.dataset.id));
+    return Array.from(ids);
+  }
+  document.getElementById('addArrowBtn').addEventListener('click', ()=>{
+    pushHistory();
+    const type = document.getElementById('arrowTypeSelect').value;
+    makeArrow(35, 50, 65, 50, type);
+  });
+
+  // ---------- Grid overlay ----------
+  const gridOverlay = document.getElementById('gridOverlay');
+  let gridVisible = false;
+  function setGridVisible(v){
+    gridVisible = v;
+    gridOverlay.classList.toggle('visible', v);
+    const btn = document.getElementById('gridToggleBtn');
+    if(btn) btn.classList.toggle('off', !v);
+  }
+  document.getElementById('gridToggleBtn').addEventListener('click', ()=> setGridVisible(!gridVisible));
+
   let resizeState = null;
+  let rotateState = null;
+  let skewState = null;
+  let arrowRotateState = null;
+  let arrowSkewState = null;
+  let arrowMoveState = null;
+  let curveDragState = null;
   document.addEventListener('pointerdown', e=>{
+    if(e.target.closest('.arrow-curve-handle')){
+      const handle = e.target.closest('.arrow-curve-handle');
+      const id = handle.dataset.id;
+      const startEl = mapLayer.querySelector(`.arrow-handle[data-id="${id}"][data-role="start"]`);
+      const endEl = mapLayer.querySelector(`.arrow-handle[data-id="${id}"][data-role="end"]`);
+      if(!startEl || !endEl) return;
+      e.preventDefault();
+      const rect = handle.closest('.sheet').getBoundingClientRect();
+      const x1 = parseFloat(startEl.style.left)/100*rect.width, y1 = parseFloat(startEl.style.top)/100*rect.height;
+      const x2 = parseFloat(endEl.style.left)/100*rect.width, y2 = parseFloat(endEl.style.top)/100*rect.height;
+      const dx = x2-x1, dy = y2-y1;
+      const len = Math.hypot(dx,dy) || 1;
+      const nx = -dy/len, ny = dx/len;
+      const pathEl = arrowLayer.querySelector(`path[data-id="${id}"]`);
+      const startOffset = parseFloat(pathEl.dataset.curveOffset);
+      curveDragState = { id, startX:e.clientX, startY:e.clientY, nx, ny, len, startOffset: isNaN(startOffset) ? 0.18 : startOffset, moved:false };
+      return;
+    }
+    if(e.target.closest('.arrow-rotate-handle')){
+      const handle = e.target.closest('.arrow-rotate-handle');
+      e.preventDefault();
+      const rect = handle.getBoundingClientRect();
+      arrowRotateState = { id: handle.dataset.id, cx: rect.left + rect.width/2, cy: rect.top + rect.height/2, moved:false };
+      return;
+    }
+    if(e.target.closest('.arrow-skew-handle')){
+      const handle = e.target.closest('.arrow-skew-handle');
+      e.preventDefault();
+      const pathEl = arrowLayer.querySelector(`path[data-id="${handle.dataset.id}"]`);
+      const startSkew = pathEl ? (parseFloat(pathEl.dataset.skew) || 0) : 0;
+      arrowSkewState = { id: handle.dataset.id, startX:e.clientX, startSkew, moved:false };
+      return;
+    }
     if(e.target.closest('.resize-handle')){
       const marker = e.target.closest('.map-marker');
       if(!marker) return;
@@ -594,7 +876,39 @@
       resizeState = { marker, startX:e.clientX, startW, moved:false };
       return;
     }
-    const marker = e.target.closest('.map-marker, .map-label');
+    if(e.target.closest('.rotate-handle')){
+      const marker = e.target.closest('.map-marker');
+      if(!marker) return;
+      e.preventDefault();
+      const rect = marker.getBoundingClientRect();
+      rotateState = { marker, cx: rect.left + rect.width/2, cy: rect.top + rect.height/2, moved:false };
+      return;
+    }
+    if(e.target.closest('.skew-handle')){
+      const marker = e.target.closest('.map-marker');
+      if(!marker) return;
+      e.preventDefault();
+      const startSkew = parseFloat(marker.dataset.skew) || 0;
+      skewState = { marker, startX:e.clientX, startSkew, moved:false };
+      return;
+    }
+    const arrowPath = e.target.closest('.arrow-path');
+    if(arrowPath && !arrowPath.classList.contains('layer-hidden')){
+      const id = arrowPath.dataset.id;
+      const startEl = mapLayer.querySelector(`.arrow-handle[data-id="${id}"][data-role="start"]`);
+      const endEl = mapLayer.querySelector(`.arrow-handle[data-id="${id}"][data-role="end"]`);
+      if(!startEl || !endEl) return;
+      e.preventDefault();
+      arrowMoveState = {
+        id, startX:e.clientX, startY:e.clientY,
+        baseStartX: parseFloat(startEl.style.left), baseStartY: parseFloat(startEl.style.top),
+        baseEndX: parseFloat(endEl.style.left), baseEndY: parseFloat(endEl.style.top),
+        rect: arrowPath.closest('.sheet').getBoundingClientRect(),
+        moved:false
+      };
+      return;
+    }
+    const marker = e.target.closest('.map-marker, .map-label, .arrow-handle');
     if(!marker || e.target.closest('.row-remove')) return;
     // A contenteditable label is dragged only while Shift is held; otherwise the
     // click places the caret for text editing.
@@ -603,12 +917,69 @@
     dragState = { marker, startX:e.clientX, startY:e.clientY, moved:false, rect: marker.closest('.sheet').getBoundingClientRect() };
   });
   document.addEventListener('pointermove', e=>{
+    if(arrowRotateState){
+      const dx = e.clientX - arrowRotateState.cx, dy = e.clientY - arrowRotateState.cy;
+      const angle = Math.atan2(dy, dx) * 180/Math.PI + 90;
+      const pathEl = arrowLayer.querySelector(`path[data-id="${arrowRotateState.id}"]`);
+      if(pathEl){ pathEl.dataset.rotation = angle.toFixed(1); updateArrowTransform(arrowRotateState.id); }
+      if(!arrowRotateState.moved){ arrowRotateState.moved = true; pushHistory(); }
+      return;
+    }
+    if(arrowSkewState){
+      const dx = e.clientX - arrowSkewState.startX;
+      const newSkew = Math.max(-60, Math.min(60, arrowSkewState.startSkew + dx/2));
+      const pathEl = arrowLayer.querySelector(`path[data-id="${arrowSkewState.id}"]`);
+      if(pathEl){ pathEl.dataset.skew = newSkew.toFixed(1); updateArrowTransform(arrowSkewState.id); }
+      if(!arrowSkewState.moved){ arrowSkewState.moved = true; pushHistory(); }
+      return;
+    }
+    if(curveDragState){
+      const dx = e.clientX - curveDragState.startX, dy = e.clientY - curveDragState.startY;
+      const proj = dx*curveDragState.nx + dy*curveDragState.ny;
+      const fracDelta = proj / curveDragState.len;
+      const pathEl = arrowLayer.querySelector(`path[data-id="${curveDragState.id}"]`);
+      if(pathEl){ pathEl.dataset.curveOffset = (curveDragState.startOffset + fracDelta).toFixed(3); updateArrowPath(curveDragState.id); }
+      if(!curveDragState.moved){ curveDragState.moved = true; pushHistory(); }
+      return;
+    }
+    if(arrowMoveState){
+      const r = arrowMoveState.rect;
+      const dxPct = ((e.clientX - arrowMoveState.startX)/r.width)*100;
+      const dyPct = ((e.clientY - arrowMoveState.startY)/r.height)*100;
+      const startEl = mapLayer.querySelector(`.arrow-handle[data-id="${arrowMoveState.id}"][data-role="start"]`);
+      const endEl = mapLayer.querySelector(`.arrow-handle[data-id="${arrowMoveState.id}"][data-role="end"]`);
+      if(startEl && endEl){
+        startEl.style.left = Math.min(100, Math.max(0, arrowMoveState.baseStartX + dxPct)) + '%';
+        startEl.style.top = Math.min(100, Math.max(0, arrowMoveState.baseStartY + dyPct)) + '%';
+        endEl.style.left = Math.min(100, Math.max(0, arrowMoveState.baseEndX + dxPct)) + '%';
+        endEl.style.top = Math.min(100, Math.max(0, arrowMoveState.baseEndY + dyPct)) + '%';
+        updateArrowPath(arrowMoveState.id);
+      }
+      if(!arrowMoveState.moved){ arrowMoveState.moved = true; pushHistory(); }
+      return;
+    }
     if(resizeState){
       const dx = e.clientX - resizeState.startX;
       const newW = Math.max(16, Math.min(200, resizeState.startW + dx));
       resizeState.marker.style.width = newW + 'px';
       resizeState.marker.style.height = newW + 'px';
       if(Math.abs(dx) > 2 && !resizeState.moved){ resizeState.moved = true; pushHistory(); }
+      return;
+    }
+    if(rotateState){
+      const dx = e.clientX - rotateState.cx, dy = e.clientY - rotateState.cy;
+      const angle = Math.atan2(dy, dx) * 180/Math.PI + 90;
+      rotateState.marker.dataset.rotation = angle.toFixed(1);
+      updateMarkerTransform(rotateState.marker);
+      if(!rotateState.moved){ rotateState.moved = true; pushHistory(); }
+      return;
+    }
+    if(skewState){
+      const dx = e.clientX - skewState.startX;
+      const newSkew = Math.max(-60, Math.min(60, skewState.startSkew + dx/2));
+      skewState.marker.dataset.skew = newSkew.toFixed(1);
+      updateMarkerTransform(skewState.marker);
+      if(!skewState.moved){ skewState.moved = true; pushHistory(); }
       return;
     }
     if(!dragState) return;
@@ -622,11 +993,20 @@
       let topPct = Math.min(100, Math.max(0, ((e.clientY - r.top) / r.height) * 100));
       dragState.marker.style.left = leftPct + '%';
       dragState.marker.style.top = topPct + '%';
+      if(dragState.marker.classList.contains('arrow-handle')) updateArrowPath(dragState.marker.dataset.id);
     }
   });
   document.addEventListener('pointerup', ()=>{
+    arrowRotateState = null;
+    arrowSkewState = null;
+    curveDragState = null;
+    arrowMoveState = null;
     if(resizeState && resizeState.moved){ justDraggedMarker = resizeState.marker; }
     resizeState = null;
+    if(rotateState && rotateState.moved){ justDraggedMarker = rotateState.marker; }
+    rotateState = null;
+    if(skewState && skewState.moved){ justDraggedMarker = skewState.marker; }
+    skewState = null;
     if(dragState && dragState.moved){ justDraggedMarker = dragState.marker; }
     dragState = null;
   });
@@ -639,7 +1019,7 @@
     const left = parseFloat(marker.style.left) + 3;
     const top  = parseFloat(marker.style.top) + 3;
     const bg = marker.style.backgroundImage || null;
-    makeMarker(Math.min(100,left), Math.min(100,top), bg);
+    makeMarker(Math.min(100,left), Math.min(100,top), bg, null, null, marker.dataset.rotation, marker.dataset.skew);
     showToast('Marqueur dupliqué.');
   });
 
@@ -661,12 +1041,19 @@
         pushHistory();
         const nameEl = layerRow.querySelector('.lname');
         const lname = nameEl ? nameEl.textContent.trim() : '';
-        document.querySelectorAll('#mapLayer .map-marker, #mapLayer .map-label').forEach(m=>{ if((m.dataset.layer||'Par défaut')===lname) m.dataset.layer='Par défaut'; });
+        document.querySelectorAll('#mapLayer .map-marker, #mapLayer .map-label, #mapLayer .arrow-handle').forEach(m=>{ if((m.dataset.layer||'Par défaut')===lname) m.dataset.layer='Par défaut'; });
+        document.querySelectorAll('#arrowLayer .arrow-path').forEach(p=>{ if((p.dataset.layer||'Par défaut')===lname) p.dataset.layer='Par défaut'; });
         layers = layers.filter(l=>l.name!==lname);
         if(activeLayerName===lname) activeLayerName = layers[0] ? layers[0].name : 'Par défaut';
         if(!layers.length) layers = [ { name:'Par défaut', visible:true } ];
         renderLayersUI();
         applyLayerVisibility();
+        return;
+      }
+      const arrowHandle = removeBtn.closest('.arrow-handle');
+      if(arrowHandle){
+        pushHistory();
+        removeArrow(arrowHandle.dataset.id);
         return;
       }
       pushHistory(); removeBtn.closest('.legend-row,.fac-row,.map-marker,.map-label').remove(); return;
@@ -739,9 +1126,6 @@
 
   // ---------- Panel visibility ----------
   function findPanel(name){
-    // The legend/factions/support panels use their name as a CSS class, but the
-    // layers panel uses "layers-panel" instead of "layers", so a plain class
-    // lookup misses it. Fall back to the panel-close button's data-panel attribute.
     return document.querySelector('.' + name)
         || (document.querySelector(`.panel-close[data-panel="${name}"]`) || {}).parentNode;
   }
@@ -781,11 +1165,11 @@
 
   // ---------- Colour palettes ----------
   const paletteCombos = [
-    { label:'Teal Tactique', vars:{ '--bg':'#0b0d0e', '--panel':'rgba(18,20,20,0.72)', '--line':'rgba(150,175,175,0.28)', '--ink':'#d7e4e2', '--dim':'#7d908d', '--accent':'#6fd8c9', '--accent-dim':'rgba(111,216,201,0.35)', '--danger':'#c94b4b' } },
-    { label:'Rouge Sanglant', vars:{ '--bg':'#0d0808', '--panel':'rgba(20,14,14,0.72)', '--line':'rgba(200,150,150,0.28)', '--ink':'#e8d7d7', '--dim':'#907d7d', '--accent':'#e05a4f', '--accent-dim':'rgba(224,90,79,0.35)', '--danger':'#c94b4b' } },
-    { label:'Vert Toxique', vars:{ '--bg':'#0a0d08', '--panel':'rgba(16,20,14,0.72)', '--line':'rgba(160,180,140,0.28)', '--ink':'#d9e4d0', '--dim':'#869080', '--accent':'#8fd85a', '--accent-dim':'rgba(143,216,90,0.35)', '--danger':'#c94b4b' } },
-    { label:'Or Impérial', vars:{ '--bg':'#0d0b06', '--panel':'rgba(20,18,14,0.72)', '--line':'rgba(190,170,130,0.28)', '--ink':'#e6ddc8', '--dim':'#948a70', '--accent':'#d8a94f', '--accent-dim':'rgba(216,169,79,0.35)', '--danger':'#c94b4b' } },
-    { label:'Violet Psychique', vars:{ '--bg':'#0b0a0e', '--panel':'rgba(18,16,22,0.72)', '--line':'rgba(170,150,190,0.28)', '--ink':'#ddd7e6', '--dim':'#837d90', '--accent':'#a875e0', '--accent-dim':'rgba(168,117,224,0.35)', '--danger':'#c94b4b' } },
+    { label:'Teal Tactique', vars:{ '--bg':'#0b0d0e', '--panel':'rgba(18,20,20,0.72)', '--line':'rgba(150,175,175,0.28)', '--ink':'#d7e4e2', '--dim':'#a8bab7', '--accent':'#6fd8c9', '--accent-dim':'rgba(111,216,201,0.35)', '--danger':'#c94b4b' } },
+    { label:'Rouge Sanglant', vars:{ '--bg':'#0d0808', '--panel':'rgba(20,14,14,0.72)', '--line':'rgba(200,150,150,0.28)', '--ink':'#e8d7d7', '--dim':'#b39f9f', '--accent':'#e05a4f', '--accent-dim':'rgba(224,90,79,0.35)', '--danger':'#c94b4b' } },
+    { label:'Vert Toxique', vars:{ '--bg':'#0a0d08', '--panel':'rgba(16,20,14,0.72)', '--line':'rgba(160,180,140,0.28)', '--ink':'#d9e4d0', '--dim':'#a8b3a0', '--accent':'#8fd85a', '--accent-dim':'rgba(143,216,90,0.35)', '--danger':'#c94b4b' } },
+    { label:'Or Impérial', vars:{ '--bg':'#0d0b06', '--panel':'rgba(20,18,14,0.72)', '--line':'rgba(190,170,130,0.28)', '--ink':'#e6ddc8', '--dim':'#b8ac8e', '--accent':'#d8a94f', '--accent-dim':'rgba(216,169,79,0.35)', '--danger':'#c94b4b' } },
+    { label:'Violet Psychique', vars:{ '--bg':'#0b0a0e', '--panel':'rgba(18,16,22,0.72)', '--line':'rgba(170,150,190,0.28)', '--ink':'#ddd7e6', '--dim':'#a49eb3', '--accent':'#a875e0', '--accent-dim':'rgba(168,117,224,0.35)', '--danger':'#c94b4b' } },
   ];
   const paletteSelect = document.getElementById('paletteSelect');
   paletteCombos.forEach((p,i)=>{
@@ -799,8 +1183,6 @@
   });
 
   // ---------- Undo history ----------
-  // Snapshots of the full project state, captured BEFORE each mutating action
-  // (add/remove row, marker drag, image load). Undo restores the previous one.
   const undoStack = [];
   const redoStack = [];
   const UNDO_LIMIT = 50;
@@ -828,6 +1210,8 @@
       layersVisible: !document.querySelector('.layers-panel').classList.contains('panel-hidden'),
       labels: Array.from(document.querySelectorAll('#mapLayer .map-label')).map(serializeLabel),
       markers: Array.from(document.querySelectorAll('#mapLayer .map-marker')).map(serializeMarker),
+      arrows: allArrowIds().map(serializeArrow).filter(Boolean),
+      gridVisible: gridVisible,
       legendVisible: !document.querySelector('.legend').classList.contains('panel-hidden'),
       factionsVisible: !document.querySelector('.factions').classList.contains('panel-hidden'),
       supportVisible: !document.querySelector('.support').classList.contains('panel-hidden'),
@@ -838,7 +1222,7 @@
   function pushHistory(){
     undoStack.push(captureState());
     if(undoStack.length > UNDO_LIMIT) undoStack.shift();
-    redoStack.length = 0; // a new action invalidates the redo branch
+    redoStack.length = 0;
     updateUndoBtn();
   }
   function updateUndoBtn(){
@@ -850,13 +1234,12 @@
   function undo(){
     if(undoStack.length === 0) return;
     const entry = undoStack[undoStack.length-1];
-    // Text-restore entries are handled inline (no full project reload).
     if(entry && entry.__textRestore){
       redoStack.push(captureState());
       const e = undoStack.pop();
       const cur = e.el.innerHTML;
       e.el.innerHTML = e.prev;
-      e.prev = cur; // swap so a subsequent redo restores the edited version
+      e.prev = cur;
       updateUndoBtn();
       scheduleAutosave();
       return;
@@ -894,15 +1277,13 @@
   }
   function scheduleAutosave(){
     if(autosaveTimer) clearTimeout(autosaveTimer);
-    autosaveTimer = setTimeout(autosave, 800); // debounce
+    autosaveTimer = setTimeout(autosave, 800);
   }
-  // Patch pushHistory so every undoable action also schedules an autosave.
   const _origPushHistory = pushHistory;
   pushHistory = function(){ _origPushHistory(); scheduleAutosave(); };
   document.addEventListener('input', e=>{
     if(e.target.isContentEditable) scheduleAutosave();
   });
-  // ---------- Undo for contenteditable text edits ----------
   let textEditSnapshot = null;
   document.addEventListener('focusin', e=>{
     if(e.target.isContentEditable){ textEditSnapshot = { el: e.target, html: e.target.innerHTML }; }
@@ -956,8 +1337,6 @@
   document.addEventListener('keydown', e=>{
     const k = e.key.toLowerCase();
     if(!(e.ctrlKey || e.metaKey)) return;
-    // Allow undo/redo even inside contenteditable (text-edit undo is supported).
-    // Only block native browser undo for actual <input>/<textarea> form fields.
     const isForm = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName);
     if(k === 'z' && !e.shiftKey){ if(!isForm){ e.preventDefault(); undo(); } }
     else if((k === 'z' && e.shiftKey) || k === 'y'){ if(!isForm){ e.preventDefault(); redo(); } }
@@ -981,6 +1360,18 @@
     const el = document.getElementById('exportVarOverride');
     if(el) el.remove();
   }
+  const EXPORT_FORMATS = {
+    '16:9':          { w:1600, h:920,  scale:2 },
+    'a4-landscape':  { w:1754, h:1240, scale:1 },
+    'a4-portrait':   { w:1240, h:1754, scale:1 },
+    'a3-landscape':  { w:2480, h:1754, scale:1 },
+    'a3-portrait':   { w:1754, h:2480, scale:1 },
+  };
+  function setArrowViewBox(w, h){
+    VB_W = w; VB_H = h;
+    arrowLayer.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    allArrowIds().forEach(updateArrowPath);
+  }
   async function exportPng(){
     if(typeof html2canvas === 'undefined'){
       showToast("La bibliothèque d'export image n'a pas pu se charger (connexion internet ?). Réessaie, ou utilise \"Imprimer / PDF\".");
@@ -989,23 +1380,30 @@
     const sheetEl = document.getElementById('sheet');
     sheetEl.classList.add('exporting');
     pinCssVarsForExport();
-    // Force a fixed pixel size INLINE on the sheet itself (not just via class),
-    // because html2canvas clones the node into a sandbox iframe where the
-    // viewport may be narrower than 1600px and `aspect-ratio` + `max-width:100%`
-    // would otherwise re-shrink it, squashing the exported image.
+
+    const fmtKey = document.getElementById('exportFormatSelect').value;
+    const fmt = EXPORT_FORMATS[fmtKey] || EXPORT_FORMATS['16:9'];
+
+    // Pin the sheet to its native pixel size OFF-SCREEN (rather than resizing
+    // it in place) so the capture is pixel-accurate without ever flashing the
+    // resized card in the viewport. html2canvas mis-handles `aspect-ratio` +
+    // `max-width:100%`, which is why a fixed pixel size is needed at all.
     const prevStyle = sheetEl.getAttribute('style') || '';
-    sheetEl.style.width = '1600px';
-    sheetEl.style.height = '920px';
+    sheetEl.style.position = 'fixed';
+    sheetEl.style.left = '-99999px';
+    sheetEl.style.top = '0';
+    sheetEl.style.width = fmt.w + 'px';
+    sheetEl.style.height = fmt.h + 'px';
     sheetEl.style.maxWidth = 'none';
     sheetEl.style.aspectRatio = 'auto';
     sheetEl.style.transform = 'none';
-    // The body uses flex centering which can also constrain the sheet; relax it.
-    const prevBodyJustify = document.body.style.justifyContent;
-    const prevBodyAlign = document.body.style.alignItems;
-    const prevBodyDisplay = document.body.style.display;
-    document.body.style.display = 'block';
+    // Arrows are drawn on a fixed-unit SVG viewBox; retarget it to the export
+    // format so percentage-based endpoints land in the right place without
+    // stretching stroke widths or arrowheads.
+    setArrowViewBox(fmt.w, fmt.h);
+
     try{
-      const canvas = await html2canvas(sheetEl, { backgroundColor: null, scale: 2, width: 1600, height: 920, windowWidth: 1600, windowHeight: 920 });
+      const canvas = await html2canvas(sheetEl, { backgroundColor: null, scale: fmt.scale, width: fmt.w, height: fmt.h, windowWidth: fmt.w, windowHeight: fmt.h });
       canvas.toBlob(blob=>{
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -1022,9 +1420,7 @@
     } finally {
       sheetEl.classList.remove('exporting');
       sheetEl.setAttribute('style', prevStyle);
-      document.body.style.display = prevBodyDisplay;
-      document.body.style.justifyContent = prevBodyJustify;
-      document.body.style.alignItems = prevBodyAlign;
+      setArrowViewBox(1600, 920);
       unpinCssVarsForExport();
     }
   }
@@ -1050,6 +1446,8 @@
       left: parseFloat(marker.style.left),
       top: parseFloat(marker.style.top),
       size: isNaN(w) ? null : w,
+      rotation: parseFloat(marker.dataset.rotation) || 0,
+      skew: parseFloat(marker.dataset.skew) || 0,
       layer: marker.dataset.layer || activeLayerName,
       icon: urlFromBg(marker.style.backgroundImage)
     };
@@ -1077,6 +1475,8 @@
       layersVisible: !document.querySelector('.layers-panel').classList.contains('panel-hidden'),
       labels: Array.from(document.querySelectorAll('#mapLayer .map-label')).map(serializeLabel),
       markers: Array.from(document.querySelectorAll('#mapLayer .map-marker')).map(serializeMarker),
+      arrows: allArrowIds().map(serializeArrow).filter(Boolean),
+      gridVisible: gridVisible,
       legendVisible: !document.querySelector('.legend').classList.contains('panel-hidden'),
       factionsVisible: !document.querySelector('.factions').classList.contains('panel-hidden'),
       supportVisible: !document.querySelector('.support').classList.contains('panel-hidden'),
@@ -1109,8 +1509,6 @@
       terrainZoom.value = Math.round(terrainScale * 100);
       updateTerrainTransform();
     } else {
-      // No terrain in the project: ensure the hint is visible again and remove
-      // any previously loaded terrain image.
       const img = document.querySelector('.terrain-slot img');
       if(img){ img.remove(); }
       hint.style.display = '';
@@ -1137,8 +1535,12 @@
     activeLayerName = state.activeLayer || (layers[0] && layers[0].name) || 'Par défaut';
     renderLayersUI();
     document.getElementById('mapLayer').innerHTML = '';
-    (state.markers || []).forEach(m => makeMarker(m.left, m.top, m.icon ? `url(${m.icon})` : null, m.size, m.layer));
+    (state.markers || []).forEach(m => makeMarker(m.left, m.top, m.icon ? `url(${m.icon})` : null, m.size, m.layer, m.rotation, m.skew));
     (state.labels || []).forEach(l => makeLabel(l.left, l.top, l.text, l.layer));
+    arrowLayer.querySelectorAll('path.arrow-path').forEach(p=>p.remove());
+    mapLayer.querySelectorAll('.arrow-handle').forEach(h=>h.remove());
+    (state.arrows || []).forEach(a => makeArrow(a.x1, a.y1, a.x2, a.y2, a.type, a.layer, a.rotation, a.skew, a.curveOffset));
+    setGridVisible(!!state.gridVisible);
 
     setPanelVisible('legend', state.legendVisible !== false);
     setPanelVisible('layers', state.layersVisible !== false);
