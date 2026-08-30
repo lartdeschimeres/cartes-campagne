@@ -418,6 +418,7 @@
   <button id="exportPngBtn">Exporter en PNG</button>
   <button onclick="document.getElementById('terrainInput').click()">Changer le terrain</button>
   <input type="range" id="terrainZoom" min="20" max="300" value="100" title="Échelle du terrain (glisser l'image pour la repositionner)">
+  <button id="resetTerrainBtn" title="Réinitialiser le cadrage du terrain (zoom 100%, recentré)">⟲ Terrain</button>
   <button id="gridToggleBtn" class="panel-toggle" title="Afficher/masquer la grille">Grille</button>
   <button id="addMarkerBtn">+ Marqueur</button>
   <button id="addLabelBtn">+ Étiquette</button>
@@ -441,7 +442,7 @@
   <button id="newMapBtn" title="Remettre la carte à vide">Nouvelle carte</button>
   <button id="undoBtn" title="Annuler (Ctrl+Z)">↶ Annuler</button>
   <button id="redoBtn" title="Rétablir (Ctrl+Y)">↷ Rétablir</button>
-  <span style="color:#6b5228; font-size:10px; padding:0 6px;">v2.7</span>
+  <span style="color:#6b5228; font-size:10px; padding:0 6px;">v2.8</span>
   <input type="file" id="loadProjectInput" accept="application/json,.json" style="display:none">
 </div>
 
@@ -500,6 +501,12 @@
     updateTerrainTransform();
   });
   document.addEventListener('pointerup', ()=>{ terrainPan = null; });
+  document.getElementById('resetTerrainBtn').addEventListener('click', ()=>{
+    pushHistory();
+    terrainScale = 1; terrainOffsetX = 0; terrainOffsetY = 0;
+    terrainZoom.value = 100;
+    updateTerrainTransform();
+  });
 
   slot.addEventListener('click', ()=>{ if(!slot.querySelector('img')) input.click(); });
   input.addEventListener('change', (e)=>{
@@ -1428,6 +1435,19 @@
     }
   }
   document.getElementById('exportPngBtn').addEventListener('click', exportPng);
+
+  // ---------- Keep the toolbar from covering the bottom panels ----------
+  // The toolbar wraps to a variable number of rows depending on window width
+  // and font loading; measure its real height instead of guessing a fixed value.
+  function adjustBodyPadding(){
+    const toolbar = document.querySelector('.toolbar');
+    if(!toolbar) return;
+    document.body.style.paddingBottom = (toolbar.getBoundingClientRect().height + 40) + 'px';
+  }
+  window.addEventListener('resize', adjustBodyPadding);
+  window.addEventListener('load', adjustBodyPadding);
+  adjustBodyPadding();
+  setTimeout(adjustBodyPadding, 400); // re-measure once webfonts have settled
 
   // ---------- Save / Load project ----------
   function urlFromBg(bg){
