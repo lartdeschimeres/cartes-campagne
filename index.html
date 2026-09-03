@@ -3,78 +3,81 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cartes de campagne — Index</title>
+<title>Cartes de campagne  Index</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600&family=IM+Fell+English&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg: #0b0d0e;
-    --ink: #d7e4e2;
-    --dim: #7d908d;
-    --line: rgba(150,175,175,0.22);
+    --bg: #f8f5f0;
+    --ink: #2a2119;
+    --dim: #6b5a48;
+    --line: rgba(100,80,50,0.2);
   }
   *{box-sizing:border-box;}
   body{
     margin:0; min-height:100vh; background:var(--bg); color:var(--ink);
-    font-family:'Rajdhani',sans-serif;
+    font-family:'EB Garamond',serif;
     display:flex; align-items:center; justify-content:center; padding:40px 20px;
   }
   .wrap{ width:100%; max-width:920px; text-align:center; }
   .kicker{
-    font-family:'Share Tech Mono',monospace; font-size:12px; letter-spacing:4px;
-    color:var(--dim); text-transform:uppercase; margin-bottom:14px;
+    font-family:'IM Fell English',serif; font-size:14px; letter-spacing:2px;
+    color:var(--dim); margin-bottom:16px; font-style:italic;
   }
   h1{
-    margin:0 0 8px; font-size:34px; font-weight:700; letter-spacing:2px; text-transform:uppercase;
+    margin:0 0 12px; font-size:36px; font-family:'IM Fell English',serif;
+    font-weight:400; letter-spacing:1px;
   }
-  p.sub{ color:var(--dim); font-size:15px; margin:0 0 48px; }
-  .cards{ display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+  p.sub{ color:var(--dim); font-size:16px; margin:0 0 50px; line-height:1.6; }
+  .cards{ display:grid; grid-template-columns:1fr 1fr; gap:28px; }
   @media (max-width:680px){ .cards{ grid-template-columns:1fr; } }
   .card{
     display:block; text-decoration:none; color:inherit;
-    border:1px solid var(--line); padding:32px 24px; position:relative; overflow:hidden;
-    transition:border-color 0.2s, transform 0.2s;
+    border:1px solid var(--line); padding:36px 28px; position:relative; overflow:hidden;
+    background:rgba(255,255,255,0.3);
+    transition:border-color 0.2s, transform 0.2s, box-shadow 0.2s;
   }
-  .card:hover{ transform:translateY(-2px); }
+  .card:hover{ transform:translateY(-2px); box-shadow:0 4px 20px rgba(0,0,0,0.08); }
   .card .tag{
-    font-family:'Share Tech Mono',monospace; font-size:11px; letter-spacing:2px;
-    text-transform:uppercase; opacity:0.75; margin-bottom:14px; display:block;
+    font-family:'IM Fell English',serif; font-size:12px; letter-spacing:1.5px;
+    text-transform:uppercase; opacity:0.7; margin-bottom:16px; display:block;
+    color:var(--dim);
   }
-  .card h2{ margin:0 0 10px; font-size:22px; letter-spacing:1px; }
-  .card p{ margin:0; font-size:13.5px; color:var(--dim); line-height:1.5; }
+  .card h2{ margin:0 0 12px; font-size:23px; letter-spacing:0.5px; font-family:'IM Fell English',serif; }
+  .card p{ margin:0; font-size:14px; color:var(--dim); line-height:1.6; font-family:'EB Garamond',serif; }
 
-  .card.gf{ --accent:#6fd8c9; }
-  .card.gf:hover{ border-color:var(--accent); box-shadow:0 0 30px rgba(111,216,201,0.08); }
+  .card.gf{ --accent:#5c6b7a; }
+  .card.gf:hover{ border-color:var(--accent); }
   .card.gf .tag{ color:var(--accent); }
 
-  .card.aof{ --accent:#a9863f; }
-  .card.aof:hover{ border-color:var(--accent); box-shadow:0 0 30px rgba(169,134,63,0.08); }
+  .card.aof{ --accent:#8b6b4a; }
+  .card.aof:hover{ border-color:var(--accent); }
   .card.aof .tag{ color:var(--accent); }
 
-  footer{ margin-top:48px; font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--dim); opacity:0.6; letter-spacing:1px; }
+  footer{ margin-top:54px; font-size:12px; color:var(--dim); opacity:0.7; letter-spacing:0.5px; font-family:'EB Garamond',serif; }
 </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="kicker">+++ Générateur de cartes de campagne +++</div>
-    <h1>Choisis ta carte</h1>
-    <p class="sub">Terrain personnalisé, factions, marqueurs, polices et palettes — tout est modifiable directement dans le navigateur.</p>
+    <div class="kicker">Gnrateur de cartes de campagne</div>
+    <h1>Cartes tactiques</h1>
+    <p class="sub">Creez des cartes personnalises pour vos campagnes de wargaming. Terrain, factions, marqueurs, polices et palettes  tout est modifiable directement dans le navigateur.</p>
 
     <div class="cards">
       <a class="card gf" href="gf-campaign-map-template.html">
-        <span class="tag">Sci-fi / Grimdark</span>
+        <span class="tag">Sci-fi</span>
         <h2>Grimdark Future</h2>
-        <p>Carte tactique pour campagnes GF — style HUD, tons froids, factions et déploiements.</p>
+        <p>Style HUD tactique avec tons froids, parfait pour les campagnes futuristes et les dploiements de forces.</p>
       </a>
 
       <a class="card aof" href="aof-campaign-map-template.html">
         <span class="tag">Fantasy</span>
         <h2>Age of Fantasy</h2>
-        <p>Carte de chronique pour campagnes AoF — parchemin, royaumes, renforts et forces en présence.</p>
+        <p>Style parchemin et chronique, idal pour les campagnes mdievales et les batailles piques.</p>
       </a>
     </div>
 
-    <footer>Ouvre une carte, personnalise-la, puis exporte en PNG ou sauvegarde ton projet en .json</footer>
+    <footer>Ouvrez une carte, personnalisez-la, puis exportez en PNG ou sauvegardez votre projet en .json</footer>
   </div>
 </body>
 </html>
