@@ -313,6 +313,34 @@
   .sheet.exporting .terrain-slot{ filter:none !important; }
   .sheet.exporting::before{ mix-blend-mode:normal !important; opacity:0.35 !important; }
   .sheet.exporting::after{ opacity:0.3 !important; }
+
+  /* Tab system for toolbar */
+  .toolbar-tabs{
+    display:flex; gap:2px; background:rgba(35,28,18,0.8); border-radius:4px; padding:2px;
+    border:1px solid #6b4e28;
+  }
+  .toolbar-tab{
+    background:transparent; color:var(--panel-text); border:none;
+    padding:8px 14px; font-family:inherit; font-size:11px; letter-spacing:1px;
+    text-transform:uppercase; cursor:pointer; border-radius:2px;
+    transition:all 0.15s;
+  }
+  .toolbar-tab:hover{background:rgba(169,134,63,0.2); color:var(--gold);}
+  .toolbar-tab.active{background:var(--gold); color:#241a10; font-weight:600;}
+  .toolbar-tab-content{
+    display:none; margin-top:8px;
+  }
+  .toolbar-tab-content.active{display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
+  .toolbar-main-content{display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
+  .toolbar-tab-content .toolbar button, .toolbar-tab-content .toolbar select{
+    background:#241a10; color:var(--gold); border:1px solid rgba(169,134,63,0.4);
+  }
+  .toolbar-tab-content .toolbar button:hover{background:rgba(169,134,63,0.15);}
+  .toolbar-main-content button, .toolbar-main-content select{
+    background:#241a10; color:var(--gold); border:1px solid rgba(169,134,63,0.4);
+  }
+  .toolbar-main-content button:hover{background:rgba(169,134,63,0.15);}
+
 </style>
 </head>
 <body>
@@ -407,45 +435,75 @@
 </div>
 
 <div class="toolbar">
-  <button onclick="window.print()">Imprimer / PDF</button>
-  <select id="exportFormatSelect" title="Format d'export">
-    <option value="16:9">Format : 16:9 (écran)</option>
-    <option value="a4-landscape">Format : A4 Paysage</option>
-    <option value="a4-portrait">Format : A4 Portrait</option>
-    <option value="a3-landscape">Format : A3 Paysage</option>
-    <option value="a3-portrait">Format : A3 Portrait</option>
-  </select>
-  <button id="exportPngBtn">Exporter en PNG</button>
-  <button onclick="document.getElementById('terrainInput').click()">Changer le terrain</button>
-  <input type="range" id="terrainZoom" min="20" max="300" value="100" title="Échelle du terrain (glisser l'image pour la repositionner)">
-  <button id="resetTerrainBtn" title="Réinitialiser le cadrage du terrain (zoom 100%, recentré)">⟲ Terrain</button>
-  <button id="gridToggleBtn" class="panel-toggle" title="Afficher/masquer la grille">Grille</button>
-  <button id="addMarkerBtn">+ Marqueur</button>
-  <button id="addLabelBtn">+ Étiquette</button>
-  <select id="arrowTypeSelect" title="Type de flèche">
-    <option value="standard">Flèche : Standard</option>
-    <option value="double">Flèche : Double</option>
-    <option value="dashed">Flèche : Pointillée</option>
-    <option value="bold">Flèche : Renfort (épaisse)</option>
-    <option value="curve">Flèche : Flanc (courbe)</option>
-  </select>
-  <button id="addArrowBtn">+ Flèche</button>
-  <button class="panel-toggle" data-panel="legend">Légende</button>
-  <button class="panel-toggle" data-panel="layers">Calques</button>
-  <select id="activeLayerSelect" title="Calque actif (où placer les nouveaux marqueurs)"></select>
-  <button class="panel-toggle" data-panel="factions">Factions</button>
-  <button class="panel-toggle" data-panel="support">Soutien</button>
-  <select id="fontSelect" title="Police de la carte"></select>
-  <select id="paletteSelect" title="Palette de couleurs"></select>
-  <button id="saveProjectBtn">Sauvegarder</button>
-  <button onclick="document.getElementById('loadProjectInput').click()">Charger</button>
-  <button id="newMapBtn" title="Remettre la carte à vide">Nouvelle carte</button>
-  <button id="undoBtn" title="Annuler (Ctrl+Z)">↶ Annuler</button>
-  <button id="redoBtn" title="Rétablir (Ctrl+Y)">↷ Rétablir</button>
-  <span style="color:#6b5228; font-size:10px; padding:0 6px;">v2.8</span>
+  <div class="toolbar-tabs">
+    <button class="toolbar-tab active" data-tab="main">Général</button>
+    <button class="toolbar-tab" data-tab="export">Export</button>
+    <button class="toolbar-tab" data-tab="map">Carte</button>
+    <button class="toolbar-tab" data-tab="tools">Outils</button>
+    <button class="toolbar-tab" data-tab="panels">Panneaux</button>
+    <button class="toolbar-tab" data-tab="style">Style</button>
+    <button class="toolbar-tab" data-tab="file">Fichier</button>
+  </div>
+
+  <div class="toolbar-main-content toolbar-tab-content active" data-tab-content="main">
+    <button id="undoBtn" title="Annuler (Ctrl+Z)">↶ Annuler</button>
+    <button id="redoBtn" title="Rétablir (Ctrl+Y)">↷ Rétablir</button>
+    <span style="color:#6b4e28; font-size:10px; padding:0 6px;">v2.8</span>
+  </div>
+
+  <div class="toolbar-tab-content" data-tab-content="export">
+    <button onclick="window.print()">Imprimer / PDF</button>
+    <select id="exportFormatSelect" title="Format d'export">
+      <option value="16:9">Format : 16:9 (écran)</option>
+      <option value="a4-landscape">Format : A4 Paysage</option>
+      <option value="a4-portrait">Format : A4 Portrait</option>
+      <option value="a3-landscape">Format : A3 Paysage</option>
+      <option value="a3-portrait">Format : A3 Portrait</option>
+    </select>
+    <button id="exportPngBtn">Exporter en PNG</button>
+  </div>
+
+  <div class="toolbar-tab-content" data-tab-content="map">
+    <button onclick="document.getElementById('terrainInput').click()">Changer le terrain</button>
+    <input type="range" id="terrainZoom" min="20" max="300" value="100" title="Échelle du terrain (glisser l'image pour la repositionner)">
+    <button id="resetTerrainBtn" title="Réinitialiser le cadrage du terrain (zoom 100%, recentré)">⋚ Terrain</button>
+    <button id="gridToggleBtn" class="panel-toggle" title="Afficher/masquer la grille">Grille</button>
+  </div>
+
+  <div class="toolbar-tab-content" data-tab-content="tools">
+    <button id="addMarkerBtn">+ Marqueur</button>
+    <button id="addLabelBtn">+ Étiquette</button>
+    <select id="arrowTypeSelect" title="Type de flèche">
+      <option value="standard">Flèche : Standard</option>
+      <option value="double">Flèche : Double</option>
+      <option value="dashed">Flèche : Pointillée</option>
+      <option value="bold">Flèche : Renfort (épaisse)</option>
+      <option value="curve">Flèche : Flanc (courbe)</option>
+    </select>
+    <button id="addArrowBtn">+ Flèche</button>
+  </div>
+
+  <div class="toolbar-tab-content" data-tab-content="panels">
+    <button class="panel-toggle" data-panel="legend">Légende</button>
+    <button class="panel-toggle" data-panel="layers">Calques</button>
+    <select id="activeLayerSelect" title="Calque actif (où placer les nouveaux marqueurs)"></select>
+    <button class="panel-toggle" data-panel="factions">Factions</button>
+    <button class="panel-toggle" data-panel="support">Soutien</button>
+  </div>
+
+  <div class="toolbar-tab-content" data-tab-content="style">
+    <select id="fontSelect" title="Police de la carte"></select>
+    <select id="paletteSelect" title="Palette de couleurs"></select>
+  </div>
+
+  <div class="toolbar-tab-content" data-tab-content="file">
+    <button id="saveProjectBtn">Sauvegarder</button>
+    <button onclick="document.getElementById('loadProjectInput').click()">Charger</button>
+    <button id="newMapBtn" title="Remettre la carte à vide">Nouvelle carte</button>
+  </div>
+
   <input type="file" id="loadProjectInput" accept="application/json,.json" style="display:none">
 </div>
-
 <script>
   // ---------- Image loading helper (with format validation) ----------
   function showToast(msg){
@@ -1601,6 +1659,23 @@
     };
     reader.readAsText(file);
   });
+
+
+  // ---------- Toolbar tabs ----------
+  document.querySelectorAll('.toolbar-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      // Remove active class from all tabs and contents
+      document.querySelectorAll('.toolbar-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.toolbar-tab-content').forEach(c => c.classList.remove('active'));
+      
+      // Add active class to clicked tab and corresponding content
+      tab.classList.add('active');
+      const tabId = tab.dataset.tab;
+      const content = document.querySelector(`[data-tab-content="${tabId}"]`);
+      if (content) content.classList.add('active');
+    });
+  });
+
 </script>
 
 </body>
