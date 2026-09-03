@@ -356,11 +356,11 @@
   <div class="map-layer" id="mapLayer">
     <svg id="arrowLayer" class="arrow-layer" viewBox="0 0 1600 920" preserveAspectRatio="none">
       <defs>
-        <marker id="arrowHeadStd" markerWidth="14" markerHeight="14" refX="11" refY="7" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
-          <path d="M0,0 L14,7 L0,14 Z" style="fill:var(--gold)"/>
+        <marker id="arrowHeadStd" markerWidth="18" markerHeight="18" refX="14" refY="9" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+          <path d="M0,0 L18,9 L0,18 Z" style="fill:var(--gold)"/>
         </marker>
-        <marker id="arrowHeadBold" markerWidth="22" markerHeight="22" refX="18" refY="11" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
-          <path d="M0,0 L22,11 L0,22 Z" style="fill:var(--wax)"/>
+        <marker id="arrowHeadBold" markerWidth="28" markerHeight="28" refX="22" refY="14" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+          <path d="M0,0 L28,14 L0,28 Z" style="fill:var(--wax)"/>
         </marker>
       </defs>
     </svg>
@@ -566,7 +566,8 @@
     updateTerrainTransform();
   });
 
-  slot.addEventListener('click', ()=>{ if(!slot.querySelector('img')) input.click(); });
+  // Removed click handler to prevent interference with item manipulation
+  // slot.addEventListener('click', ()=>{ if(!slot.querySelector('img')) input.click(); });
   input.addEventListener('change', (e)=>{
     const file = e.target.files[0];
     if(!file) return;
